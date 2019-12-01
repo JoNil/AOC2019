@@ -1,12 +1,11 @@
-use std::fs;
 use std::error::Error;
+use std::fs;
 
 fn calculate_fuel_inner(mass: i32) -> i32 {
     mass / 3 - 2
 }
 
 fn calculate_fuel(mass: i32) -> i32 {
-    
     let mut fuel = calculate_fuel_inner(mass);
     let mut total_fuel = fuel;
 
@@ -27,7 +26,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut total_fuel = 0;
 
     for line in input.lines() {
-
         let mass = line.parse::<i32>()?;
 
         let new_fuel = calculate_fuel(mass);
