@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (verb, noun) = find_verb_noun(&program, 19690720)?;
 
-    println!("program[0] => {}", 100 * verb + noun);
+    println!("{}", 100 * verb + noun);
 
     Ok(())
 }
