@@ -42,7 +42,7 @@ fn run_program(memory: &mut [i32]) -> Result<(), Box<dyn Error>> {
 
                 memory[res_address as usize] =
                     memory[a_address as usize] * memory[b_address as usize];
-                
+
                 pc + 4
             }
             Opcode::Halt => {
@@ -53,10 +53,8 @@ fn run_program(memory: &mut [i32]) -> Result<(), Box<dyn Error>> {
 }
 
 fn find_verb_noun(initial_program: &[i32], result: i32) -> Result<(i32, i32), Box<dyn Error>> {
-
     for verb in 0..=99 {
         for noun in 0..=99 {
-
             let mut program = initial_program.to_owned();
 
             program[1] = verb;
