@@ -118,12 +118,6 @@ fn wire_solver_b(input: &str) -> Result<i32, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    {
-        let input = "R75,D30,R83,U83,L12,D49,R71,U7,L72
-                     U62,R66,U55,R34,D71,R55,D58,R83";
-
-        assert_eq!(wire_solver_b(input).unwrap(), 610);
-    }
 
     let input = fs::read_to_string("input")?;
 
