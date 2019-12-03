@@ -40,35 +40,32 @@ fn line_segments_intersect(
     segment_a: &((i32, i32), (i32, i32)),
     segment_b: &((i32, i32), (i32, i32)),
 ) -> Option<(i32, i32)> {
-
     if is_horizontal(segment_a) && is_vertical(segment_b) {
-
         let x_low = i32::min((segment_a.0).0, (segment_a.1).0);
         let x_high = i32::max((segment_a.0).0, (segment_a.1).0);
 
         let y_low = i32::min((segment_b.0).1, (segment_b.1).1);
         let y_high = i32::max((segment_b.0).1, (segment_b.1).1);
 
-        if is_between((segment_a.0).1, y_low, y_high) && is_between((segment_b.0).0, x_low, x_high) {
+        if is_between((segment_a.0).1, y_low, y_high) && is_between((segment_b.0).0, x_low, x_high)
+        {
             Some(((segment_b.0).0, (segment_a.0).1))
         } else {
             None
         }
-
     } else if is_vertical(segment_a) && is_horizontal(segment_b) {
-
         let x_low = i32::min((segment_b.0).0, (segment_b.1).0);
         let x_high = i32::max((segment_b.0).0, (segment_b.1).0);
 
         let y_low = i32::min((segment_a.0).1, (segment_a.1).1);
         let y_high = i32::max((segment_a.0).1, (segment_a.1).1);
 
-        if is_between((segment_b.0).1, y_low, y_high) && is_between((segment_a.0).0, x_low, x_high) {
+        if is_between((segment_b.0).1, y_low, y_high) && is_between((segment_a.0).0, x_low, x_high)
+        {
             Some(((segment_a.0).0, (segment_b.0).1))
         } else {
             None
         }
-
     } else {
         None
     }
@@ -97,9 +94,12 @@ fn wire_solver(input: &str) -> Result<i32, Box<dyn Error>> {
 
     for line_segment_a in line_a {
         for line_segment_b in line_b {
-            if let Some((intersect_x, intersect_y)) = line_segments_intersect(line_segment_a, line_segment_b) {
-                min_distance = i32::min(min_distance, i32::abs(intersect_x) + i32::abs(intersect_y));
-            }   
+            if let Some((intersect_x, intersect_y)) =
+                line_segments_intersect(line_segment_a, line_segment_b)
+            {
+                min_distance =
+                    i32::min(min_distance, i32::abs(intersect_x) + i32::abs(intersect_y));
+            }
         }
     }
 
@@ -107,7 +107,6 @@ fn wire_solver(input: &str) -> Result<i32, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
     let input = fs::read_to_string("input")?;
 
     let result = wire_solver(&input)?;
@@ -119,7 +118,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_line_segment, line_segments_intersect, wire_solver};
+    use super::{line_segments_intersect, parse_line_segment, wire_solver};
 
     #[test]
     fn test_parse_line_segment() {
@@ -165,7 +164,7 @@ mod tests {
             let a = ((1, -1), (1, 1));
             let b = ((0, 0), (10, 0));
 
-            assert_eq!(line_segments_intersect(&a, &b),  Some((1, 0)));
+            assert_eq!(line_segments_intersect(&a, &b), Some((1, 0)));
         }
 
         {
