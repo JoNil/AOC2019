@@ -69,7 +69,7 @@ mod tests {
     use super::follows_rules;
 
     #[test]
-    fn test_parse_line_segment() {
+    fn test_follows_rules() {
         assert_eq!(follows_rules(111111), true);
         assert_eq!(follows_rules(223450), false);
         assert_eq!(follows_rules(123789), false);
