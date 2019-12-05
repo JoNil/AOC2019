@@ -118,7 +118,6 @@ fn wire_solver_b(input: &str) -> Result<i32, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
     let input = fs::read_to_string("input")?;
 
     let result = wire_solver_b(&input)?;

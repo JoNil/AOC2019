@@ -1,11 +1,14 @@
 use std::error::Error;
 
 fn segment_num(number: i32) -> Vec<i32> {
-    number.to_string().chars().map(|d| d.to_digit(10).unwrap() as i32).collect()
+    number
+        .to_string()
+        .chars()
+        .map(|d| d.to_digit(10).unwrap() as i32)
+        .collect()
 }
 
 fn follows_rules_b(number: i32) -> bool {
-
     let arr = segment_num(number);
 
     if arr.len() != 6 {
@@ -67,7 +70,6 @@ fn follows_rules_b(number: i32) -> bool {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    
     let mut num_possible = 0;
 
     for i in 236491..=713787 {
