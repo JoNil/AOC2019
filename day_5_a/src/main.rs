@@ -39,12 +39,8 @@ impl From<i32> for Opcode {
 
 fn get_parameter(memory: &[i32], value: i32, mode: ParameterMode) -> i32 {
     match mode {
-        ParameterMode::Position => {
-            memory[value as usize]
-        }
-        ParameterMode::Immediate => {
-            value
-        }
+        ParameterMode::Position => memory[value as usize],
+        ParameterMode::Immediate => value,
     }
 }
 
