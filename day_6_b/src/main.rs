@@ -2,7 +2,6 @@ use std::error::Error;
 use std::fs;
 use std::collections::HashMap;
 
-
 fn parse_orbits(input: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
     
     let mut res = HashMap::new();
