@@ -25,13 +25,12 @@ fn parse_images(input: &str, image_len: i32) -> Result<Vec<Vec<i32>>, Box<dyn Er
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
-    let images = parse_images(&input, 25*6)?;
+    let images = parse_images(&input, 25 * 6)?;
 
     let mut min_zeroes = std::i32::MAX;
     let mut min_zeroes_index = None;
 
     for (i, image) in images.iter().enumerate() {
-        
         let zero_count = image.iter().filter(|d| **d == 0).count() as i32;
 
         if zero_count < min_zeroes {

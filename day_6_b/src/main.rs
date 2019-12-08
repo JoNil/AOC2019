@@ -1,13 +1,11 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
-use std::collections::HashMap;
 
 fn parse_orbits(input: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
-    
     let mut res = HashMap::new();
-    
+
     for line in input.lines() {
-        
         let split = line.split(")").collect::<Vec<&str>>();
         let orbits = split.get(0).ok_or("Bad input")?.trim();
         let name = split.get(1).ok_or("Bad input")?.trim();
@@ -18,8 +16,10 @@ fn parse_orbits(input: &str) -> Result<HashMap<String, String>, Box<dyn Error>> 
     Ok(res)
 }
 
-fn path_to_com<'a>(bodys: &'a HashMap<String, String>, mut body: &'a str) -> Result<Vec<String>, Box<dyn Error>> {
-
+fn path_to_com<'a>(
+    bodys: &'a HashMap<String, String>,
+    mut body: &'a str,
+) -> Result<Vec<String>, Box<dyn Error>> {
     let mut res = Vec::new();
 
     while body != "COM" {
@@ -31,16 +31,12 @@ fn path_to_com<'a>(bodys: &'a HashMap<String, String>, mut body: &'a str) -> Res
 }
 
 fn find_transfer(bodys: &HashMap<String, String>, a: &str, b: &str) -> Result<i32, Box<dyn Error>> {
-
     let a_to_com = path_to_com(&bodys, a)?;
     let b_to_com = path_to_com(&bodys, b)?;
 
     for (index_a, body_a) in a_to_com.iter().enumerate() {
-
         for (index_b, body_b) in b_to_com.iter().enumerate() {
-            
             if body_a == body_b {
-
                 return Ok(index_a as i32 + index_b as i32);
             }
         }
@@ -63,7 +59,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_orbits, find_transfer};
+    use super::{find_transfer, parse_orbits};
 
     #[test]
     fn test_count_orbits() {
