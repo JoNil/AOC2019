@@ -6,8 +6,9 @@ struct Astroid {
     pos: [i32; 2],
 }
 
-fn parse_astroid_positions(input: &str) -> Vec<Astroid> {
+fn parse_astroid_positions(input: &str) -> (Vec<Astroid>, [i32; 2]) {
     let mut res = Vec::new();
+    let mut monitoring_station = [0, 0];
 
     for (y, line) in input.lines().enumerate() {
         for (x, c) in line.trim().chars().enumerate() {
@@ -15,11 +16,13 @@ fn parse_astroid_positions(input: &str) -> Vec<Astroid> {
                 res.push(Astroid {
                     pos: [x as i32, y as i32],
                 });
+            } else if c == 'X' {
+                monitoring_station = [x as i32, y as i32]
             }
         }
     }
 
-    res
+    (res, monitoring_station)
 }
 
 fn dist(a: [i32; 2], b: [i32; 2]) -> f64 {
@@ -92,108 +95,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_best_monitoring_position, parse_astroid_positions, Astroid};
+    
 
-    #[test]
-    fn test_parse_astroid_positions() {
-        let input = ".#...
-         ..#..";
-
-        let output = [Astroid { pos: [1, 0] }, Astroid { pos: [2, 1] }];
-
-        assert_eq!(parse_astroid_positions(&input), &output);
-    }
-
-    #[test]
-    fn test_find_best_monitoring_position() {
-        {
-            let input = ".#..#
-            .....
-            #####
-            ....#
-            ...##";
-            assert_eq!(
-                find_best_monitoring_position(&parse_astroid_positions(&input)),
-                ([3, 4], 8)
-            );
-        }
-
-        {
-            let input = "......#.#.
-            #..#.#....
-            ..#######.
-            .#.#.###..
-            .#..#.....
-            ..#....#.#
-            #..#....#.
-            .##.#..###
-            ##...#..#.
-            .#....####";
-            assert_eq!(
-                find_best_monitoring_position(&parse_astroid_positions(&input)),
-                ([5, 8], 33)
-            );
-        }
-
-        {
-            let input = "#.#...#.#.
-            .###....#.
-            .#....#...
-            ##.#.#.#.#
-            ....#.#.#.
-            .##..###.#
-            ..#...##..
-            ..##....##
-            ......#...
-            .####.###.";
-            assert_eq!(
-                find_best_monitoring_position(&parse_astroid_positions(&input)),
-                ([1, 2], 35)
-            );
-        }
-
-        {
-            let input = ".#..#..###
-            ####.###.#
-            ....###.#.
-            ..###.##.#
-            ##.##.#.#.
-            ....###..#
-            ..#.#..#.#
-            #..#.#.###
-            .##...##.#
-            .....#.#..";
-            assert_eq!(
-                find_best_monitoring_position(&parse_astroid_positions(&input)),
-                ([6, 3], 41)
-            );
-        }
-
-        {
-            let input = ".#..##.###...#######
-            ##.############..##.
-            .#.######.########.#
-            .###.#######.####.#.
-            #####.##.#.##.###.##
-            ..#####..#.#########
-            ####################
-            #.####....###.#.#.##
-            ##.#################
-            #####.##.###..####..
-            ..######..##.#######
-            ####.##.####...##..#
-            .#####..#.######.###
-            ##...#.##########...
-            #.##########.#######
-            .####.#.###.###.#.##
-            ....##.##.###..#####
-            .#.#.###########.###
-            #.#.#.#####.####.###
-            ###.##.####.##.#..##";
-            assert_eq!(
-                find_best_monitoring_position(&parse_astroid_positions(&input)),
-                ([11, 13], 210)
-            );
-        }
-    }
+    
 }
