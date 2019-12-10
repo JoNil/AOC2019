@@ -36,14 +36,30 @@ enum Opcode {
 impl From<i64> for Opcode {
     fn from(value: i64) -> Self {
         match value % 100 {
-            1 => Opcode::Add((value / 100).into(), (value / 1000).into(), (value / 10000).into()),
-            2 => Opcode::Mult((value / 100).into(), (value / 1000).into(), (value / 10000).into()),
+            1 => Opcode::Add(
+                (value / 100).into(),
+                (value / 1000).into(),
+                (value / 10000).into(),
+            ),
+            2 => Opcode::Mult(
+                (value / 100).into(),
+                (value / 1000).into(),
+                (value / 10000).into(),
+            ),
             3 => Opcode::Input((value / 100).into()),
             4 => Opcode::Output((value / 100).into()),
             5 => Opcode::JumpIfTrue((value / 100).into(), (value / 1000).into()),
             6 => Opcode::JumpIfFalse((value / 100).into(), (value / 1000).into()),
-            7 => Opcode::LessThen((value / 100).into(), (value / 1000).into(), (value / 10000).into()),
-            8 => Opcode::Equals((value / 100).into(), (value / 1000).into(), (value / 10000).into()),
+            7 => Opcode::LessThen(
+                (value / 100).into(),
+                (value / 1000).into(),
+                (value / 10000).into(),
+            ),
+            8 => Opcode::Equals(
+                (value / 100).into(),
+                (value / 1000).into(),
+                (value / 10000).into(),
+            ),
             9 => Opcode::RelativeBaseOffset((value / 100).into()),
             99 => Opcode::Halt,
             _ => panic!("Unknown opcode"),
@@ -89,8 +105,9 @@ fn run_program(program: &[i64], input: &[i64]) -> Result<Vec<i64>, Box<dyn Error
                 let b = memory[pc + 2];
                 let res = memory[pc + 3];
 
-                memory[get_address(res, res_mode, relative_base)] = get_parameter(&memory, a, a_mode, relative_base)
-                    + get_parameter(&memory, b, b_mode, relative_base);
+                memory[get_address(res, res_mode, relative_base)] =
+                    get_parameter(&memory, a, a_mode, relative_base)
+                        + get_parameter(&memory, b, b_mode, relative_base);
 
                 pc += 4
             }
@@ -99,15 +116,16 @@ fn run_program(program: &[i64], input: &[i64]) -> Result<Vec<i64>, Box<dyn Error
                 let b = memory[pc + 2];
                 let res = memory[pc + 3];
 
-                memory[get_address(res, res_mode, relative_base)] = get_parameter(&memory, a, a_mode, relative_base)
-                    * get_parameter(&memory, b, b_mode, relative_base);
+                memory[get_address(res, res_mode, relative_base)] =
+                    get_parameter(&memory, a, a_mode, relative_base)
+                        * get_parameter(&memory, b, b_mode, relative_base);
 
                 pc += 4
             }
             Opcode::Input(mode) => {
                 let value = memory[pc + 1];
 
-                memory[get_address(value, mode, relative_base)] = input[input_counter];                
+                memory[get_address(value, mode, relative_base)] = input[input_counter];
 
                 input_counter += 1;
                 pc += 2
