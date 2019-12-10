@@ -41,7 +41,7 @@ fn is_visible(from: Astroid, to: Astroid, astroids: &[Astroid]) -> bool {
         let ac = dist(astroid.pos, to.pos);
         let bc = dist(astroid.pos, from.pos);
 
-        if (ac + bc) - ab < 10.0 * std::f64::EPSILON {
+        if (ac + bc) - ab < 20.0 * std::f64::EPSILON {
             res = false;
             break;
         }
@@ -83,7 +83,7 @@ fn find_best_monitoring_position(astroids: &[Astroid]) -> ([i32; 2], i32) {
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
-    let (_, res) = find_best_monitoring_position(&parse_astroid_positions(&input));
+    let res = find_best_monitoring_position(&parse_astroid_positions(&input));
 
     println!("{:?}", res);
 
