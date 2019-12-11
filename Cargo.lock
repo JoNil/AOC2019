@@ -18,6 +18,9 @@ dependencies = [
 [[package]]
 name = "day_11_b"
 version = "0.1.0"
+dependencies = [
+ "int_comp 0.1.0",
+]
 
 [[package]]
 name = "day_1_a"
