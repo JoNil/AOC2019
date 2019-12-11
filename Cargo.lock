@@ -9,6 +9,17 @@ name = "day_10_b"
 version = "0.1.0"
 
 [[package]]
+name = "day_11_a"
+version = "0.1.0"
+dependencies = [
+ "int_comp 0.1.0",
+]
+
+[[package]]
+name = "day_11_b"
+version = "0.1.0"
+
+[[package]]
 name = "day_1_a"
 version = "0.1.0"
 
@@ -75,8 +86,18 @@ version = "0.1.0"
 [[package]]
 name = "day_9_a"
 version = "0.1.0"
+dependencies = [
+ "int_comp 0.1.0",
+]
 
 [[package]]
 name = "day_9_b"
+version = "0.1.0"
+dependencies = [
+ "int_comp 0.1.0",
+]
+
+[[package]]
+name = "int_comp"
 version = "0.1.0"
 
