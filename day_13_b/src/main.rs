@@ -1,5 +1,5 @@
 use int_comp::{IntcodeComputer, IntcodeOutput};
-use pancurses::{initscr, endwin, Input, noecho};
+use pancurses::{initscr, endwin, noecho};
 use std::convert::TryFrom;
 use std::error::Error;
 use std::fs;
@@ -40,13 +40,6 @@ impl TryFrom<i32> for TileType {
             _ => return Err("Unknown Tile"),
         })
     }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-struct Tile {
-    x: i32,
-    y: i32,
-    ty: TileType,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
