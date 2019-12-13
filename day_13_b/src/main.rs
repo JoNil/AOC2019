@@ -1,7 +1,10 @@
 use int_comp::{IntcodeComputer, IntcodeOutput};
+use pancurses::{initscr, endwin, Input, noecho};
 use std::convert::TryFrom;
 use std::error::Error;
 use std::fs;
+use std::thread;
+use std::time::Duration;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 enum TileType {
@@ -10,6 +13,18 @@ enum TileType {
     Block,
     Paddle,
     Ball,
+}
+
+impl TileType {
+    fn to_char(&self) -> char {
+        match *self {
+            TileType::Empty => ' ',
+            TileType::Wall => '#',
+            TileType::Block => '=',
+            TileType::Paddle => '_',
+            TileType::Ball => 'o',
+        }
+    }
 }
 
 impl TryFrom<i32> for TileType {
@@ -37,33 +52,65 @@ struct Tile {
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
-    let program = input
+    let mut program = input
         .split(",")
         .map(|v| v.trim().parse::<i64>())
         .collect::<Result<Vec<_>, _>>()?;
 
-    let mut int_comp = IntcodeComputer::new(&program);
+    program[0] = 2;
 
-    let mut tiles = Vec::new();
+    let mut int_comp = IntcodeComputer::new(&program);
+    let mut score = 0;
+    let mut last_ball_x = 0;
+    let mut last_paddle_x = 0;
+
+    let window = initscr();
+    window.nodelay(true);
+    noecho();
 
     loop {
-        match int_comp.run(&[], Some(3))? {
+        window.getch();
+
+        let input = if last_ball_x < last_paddle_x {
+            -1
+        } else if last_ball_x > last_paddle_x {
+            1
+        } else {
+            0
+        };
+
+        match int_comp.run(&[input], Some(3))? {
             IntcodeOutput::Interrupt(output) => {
-                tiles.push(Tile {
-                    x: output[0] as i32,
-                    y: output[1] as i32,
-                    ty: TileType::try_from(output[2] as i32)?,
-                });
+                if output[0] == -1 && output[1] == 0 {
+                    score = output[2];
+                } else {
+                    let x = output[0] as i32;
+                    let y = output[1] as i32;
+                    let ty = TileType::try_from(output[2] as i32)?;
+
+                    if ty == TileType::Ball {
+                        last_ball_x = x;
+                    }
+
+                    if ty == TileType::Paddle {
+                        last_paddle_x = x;
+                    }
+
+                    window.mv(y, x);
+                    window.addch(ty.to_char());
+                }
             }
             IntcodeOutput::Halt(_) => {
                 break;
             }
         }
+
+        thread::sleep(Duration::from_millis(10));
     }
 
-    let res = tiles.iter().filter(|t| t.ty == TileType::Block).count();
+    endwin();
 
-    println!("{}", res);
+    println!("{}", score);
 
     Ok(())
 }
