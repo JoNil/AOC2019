@@ -1,8 +1,5 @@
-use std::collections::HashSet;
 use std::error::Error;
 use std::fs;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign};
 
 #[derive(Copy, Clone, Eq, Hash, PartialEq, Default, Debug)]
@@ -107,18 +104,11 @@ fn simulate_gravity_step(moons: &mut [Moon], iterations: i32) {
     }
 }
 
-fn hash_moons(moons: &[Moon]) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    Hash::hash_slice(moons, &mut hasher);
-    hasher.finish()
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
     let mut moons = parse_moons(&input)?;
-    let mut previous_states = HashSet::new();
-    previous_states.insert(hash_moons(&moons));
+    let initial = moons.clone();
     let mut iterations = 0;
 
     loop {
@@ -126,11 +116,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         simulate_gravity_step(&mut moons, 1);
 
-        if previous_states.contains(&hash_moons(&moons)) {
+        if initial == moons {
             break;
         }
-
-        previous_states.insert(hash_moons(&moons));
     }
 
     println!("{}", iterations);
