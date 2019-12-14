@@ -65,29 +65,22 @@ fn simulate_gravity_step(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) {
             let a = &moons[i];
             let b = &moons[j];
 
-            if a.pos.x < b.pos.x {
-                gravitys[i].x += 1;
-                gravitys[j].x -= 1;
-            } else if a.pos.x > b.pos.x {
-                gravitys[i].x -= 1;
-                gravitys[j].x += 1;
+            {
+                let x_sign = i32::signum(a.pos.x - b.pos.x);
+                gravitys[i].x -= x_sign;
+                gravitys[j].x += x_sign;
             }
 
-            if a.pos.y < b.pos.y {
-                gravitys[i].y += 1;
-                gravitys[j].y -= 1;
-            } else if a.pos.y > b.pos.y {
-                gravitys[i].y -= 1;
-                gravitys[j].y += 1;
+            {
+                let y_sign = i32::signum(a.pos.y - b.pos.y);
+                gravitys[i].y -= y_sign;
+                gravitys[j].y += y_sign;
             }
 
-            if a.pos.z < b.pos.z {
-                gravitys[i].z += 1;
-                gravitys[j].z -= 1;
-
-            } else if a.pos.z > b.pos.z {
-                gravitys[i].z -= 1;
-                gravitys[j].z += 1;
+            {
+                let z_sign = i32::signum(a.pos.z - b.pos.z);
+                gravitys[i].z -= z_sign;
+                gravitys[j].z += z_sign;
             }
         }
     }
