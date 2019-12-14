@@ -1,27 +1,13 @@
 use std::convert::TryInto;
 use std::error::Error;
 use std::fs;
-use std::ops::AddAssign;
-use std::time::Instant;
 
-#[derive(Copy, Clone, Eq, Hash, PartialEq, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 struct Vec3 {
-    x: i32,
-    y: i32,
-    z: i32,
+    p: [i32; 3],
 }
 
-impl AddAssign for Vec3 {
-    fn add_assign(&mut self, other: Self) {
-        *self = Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-        };
-    }
-}
-
-#[derive(Copy, Clone, Eq, Hash, PartialEq, Default, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 struct Moon {
     pos: Vec3,
     vel: Vec3,
@@ -42,9 +28,9 @@ fn parse_moons(input: &str) -> Result<Vec<Moon>, Box<dyn Error>> {
                 .collect::<Vec<_>>()
                 .as_slice()
             {
-                &["x", x] => moon.pos.x = x.parse()?,
-                &["y", y] => moon.pos.y = y.parse()?,
-                &["z", z] => moon.pos.z = z.parse()?,
+                &["x", x] => moon.pos.p[0] = x.parse()?,
+                &["y", y] => moon.pos.p[1] = y.parse()?,
+                &["z", z] => moon.pos.p[2] = z.parse()?,
                 _ => return Err("Invalid moon".into()),
             }
         }
@@ -55,73 +41,66 @@ fn parse_moons(input: &str) -> Result<Vec<Moon>, Box<dyn Error>> {
     Ok(res)
 }
 
-fn simulate_gravity_step(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) {
+fn simulate_gravity_step_axis(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4], axis: usize) {
+    gravitys.iter_mut().for_each(|v| v.p[axis] = 0);
 
-    gravitys.iter_mut().for_each(|v| *v = Vec3 { x: 0, y: 0, z: 0 });
-    
     for i in 0..moons.len() {
-        for j in (i+1)..moons.len() {
-
+        for j in (i + 1)..moons.len() {
             let a = &moons[i];
             let b = &moons[j];
 
-            {
-                let x_sign = i32::signum(a.pos.x - b.pos.x);
-                gravitys[i].x -= x_sign;
-                gravitys[j].x += x_sign;
-            }
-
-            {
-                let y_sign = i32::signum(a.pos.y - b.pos.y);
-                gravitys[i].y -= y_sign;
-                gravitys[j].y += y_sign;
-            }
-
-            {
-                let z_sign = i32::signum(a.pos.z - b.pos.z);
-                gravitys[i].z -= z_sign;
-                gravitys[j].z += z_sign;
-            }
+            let sign = i32::signum(a.pos.p[axis] - b.pos.p[axis]);
+            gravitys[i].p[axis] -= sign;
+            gravitys[j].p[axis] += sign;
         }
     }
 
     for (i, moon) in moons.iter_mut().enumerate() {
-        moon.vel += gravitys[i];
-        moon.pos += moon.vel;
+        moon.vel.p[axis] += gravitys[i].p[axis];
+        moon.pos.p[axis] += moon.vel.p[axis];
     }
 }
 
-fn find_iterations(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) -> i64 {
-    
+fn find_iterations_axis(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) -> [i64; 3] {
     let initial = moons.clone();
-    
-    let mut iterations: i64 = 0;
-    let mut time = Instant::now();
 
-    loop {
-        iterations += 1;
+    let mut iterations: [i64; 3] = [0; 3];
 
-        if iterations % 10_000_000 == 0 {
-            let diff = time.elapsed();
-            time = Instant::now();
-            println!("{:?}", diff.as_millis());
-        }
+    for axis in 0..3 {
+        loop {
+            iterations[axis] += 1;
 
-        simulate_gravity_step(moons, gravitys);
+            simulate_gravity_step_axis(moons, gravitys, axis);
 
-        if initial == *moons {
-            break;
+            if initial[0].pos.p[axis] == moons[0].pos.p[axis]
+                && initial[0].vel.p[axis] == moons[0].vel.p[axis]
+                && initial[1].pos.p[axis] == moons[1].pos.p[axis]
+                && initial[1].vel.p[axis] == moons[1].vel.p[axis]
+                && initial[2].pos.p[axis] == moons[2].pos.p[axis]
+                && initial[2].vel.p[axis] == moons[2].vel.p[axis]
+                && initial[3].pos.p[axis] == moons[3].pos.p[axis]
+                && initial[3].vel.p[axis] == moons[3].vel.p[axis]
+            {
+                break;
+            }
         }
     }
 
     iterations
 }
 
+fn find_iterations(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) -> i64 {
+    let loop_iterations_per_axis = find_iterations_axis(moons, gravitys);
+
+    let a = num_integer::lcm(loop_iterations_per_axis[0], loop_iterations_per_axis[1]);
+
+    num_integer::lcm(a, loop_iterations_per_axis[2])
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
     let moons = parse_moons(&input)?;
-    
 
     let mut moons: [Moon; 4] = moons[..].try_into()?;
 
@@ -140,8 +119,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
+    use super::{find_iterations, parse_moons, simulate_gravity_step_axis, Moon};
     use std::convert::TryInto;
-    use super::{Moon, parse_moons, simulate_gravity_step, find_iterations};
 
     #[test]
     fn test_find_iterations() {
@@ -181,39 +160,41 @@ mod tests {
         };
 
         for _ in 0..10 {
-            simulate_gravity_step(&mut moons, &mut gravitys);
+            simulate_gravity_step_axis(&mut moons, &mut gravitys, 0);
+            simulate_gravity_step_axis(&mut moons, &mut gravitys, 1);
+            simulate_gravity_step_axis(&mut moons, &mut gravitys, 2);
         }
 
-        assert_eq!(moons[0].pos.x, -9);
-        assert_eq!(moons[0].pos.y, -10);
-        assert_eq!(moons[0].pos.z, 1);
+        assert_eq!(moons[0].pos.p[0], -9);
+        assert_eq!(moons[0].pos.p[1], -10);
+        assert_eq!(moons[0].pos.p[2], 1);
 
-        assert_eq!(moons[0].vel.x, -2);
-        assert_eq!(moons[0].vel.y, -2);
-        assert_eq!(moons[0].vel.z, -1);
+        assert_eq!(moons[0].vel.p[0], -2);
+        assert_eq!(moons[0].vel.p[1], -2);
+        assert_eq!(moons[0].vel.p[2], -1);
 
-        assert_eq!(moons[1].pos.x, 4);
-        assert_eq!(moons[1].pos.y, 10);
-        assert_eq!(moons[1].pos.z, 9);
+        assert_eq!(moons[1].pos.p[0], 4);
+        assert_eq!(moons[1].pos.p[1], 10);
+        assert_eq!(moons[1].pos.p[2], 9);
 
-        assert_eq!(moons[1].vel.x, -3);
-        assert_eq!(moons[1].vel.y, 7);
-        assert_eq!(moons[1].vel.z, -2);
+        assert_eq!(moons[1].vel.p[0], -3);
+        assert_eq!(moons[1].vel.p[1], 7);
+        assert_eq!(moons[1].vel.p[2], -2);
 
-        assert_eq!(moons[2].pos.x, 8);
-        assert_eq!(moons[2].pos.y, -10);
-        assert_eq!(moons[2].pos.z, -3);
+        assert_eq!(moons[2].pos.p[0], 8);
+        assert_eq!(moons[2].pos.p[1], -10);
+        assert_eq!(moons[2].pos.p[2], -3);
 
-        assert_eq!(moons[2].vel.x, 5);
-        assert_eq!(moons[2].vel.y, -1);
-        assert_eq!(moons[2].vel.z, -2);
+        assert_eq!(moons[2].vel.p[0], 5);
+        assert_eq!(moons[2].vel.p[1], -1);
+        assert_eq!(moons[2].vel.p[2], -2);
 
-        assert_eq!(moons[3].pos.x, 5);
-        assert_eq!(moons[3].pos.y, -10);
-        assert_eq!(moons[3].pos.z, 3);
+        assert_eq!(moons[3].pos.p[0], 5);
+        assert_eq!(moons[3].pos.p[1], -10);
+        assert_eq!(moons[3].pos.p[2], 3);
 
-        assert_eq!(moons[3].vel.x, 0);
-        assert_eq!(moons[3].vel.y, -4);
-        assert_eq!(moons[3].vel.z, 5);
+        assert_eq!(moons[3].vel.p[0], 0);
+        assert_eq!(moons[3].vel.p[1], -4);
+        assert_eq!(moons[3].vel.p[2], 5);
     }
 }
