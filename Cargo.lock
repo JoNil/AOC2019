@@ -77,10 +77,6 @@ name = "day_12_b"
 version = "0.1.0"
 
 [[package]]
-name = "day_12_b_2"
-version = "0.1.0"
-
-[[package]]
 name = "day_13_a"
 version = "0.1.0"
 dependencies = [
