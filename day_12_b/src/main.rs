@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::error::Error;
 use std::fs;
 use std::ops::AddAssign;
@@ -54,7 +55,7 @@ fn parse_moons(input: &str) -> Result<Vec<Moon>, Box<dyn Error>> {
     Ok(res)
 }
 
-fn simulate_gravity_step(moons: &mut [Moon], gravitys: &mut [Vec3]) {
+fn simulate_gravity_step(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) {
 
     gravitys.iter_mut().for_each(|v| *v = Vec3 { x: 0, y: 0, z: 0 });
     
@@ -97,35 +98,47 @@ fn simulate_gravity_step(moons: &mut [Moon], gravitys: &mut [Vec3]) {
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let input = fs::read_to_string("input")?;
-
-    let mut moons = parse_moons(&input)?;
+fn find_iterations(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) -> i64 {
+    
     let initial = moons.clone();
-    let mut gravitys = {
-        let mut gravitys = Vec::new();
-        gravitys.resize_with(moons.len(), Default::default);
-        gravitys.into_boxed_slice()
-    };
+    
     let mut iterations: i64 = 0;
-
     let mut time = Instant::now();
 
     loop {
         iterations += 1;
 
-        if iterations % 1_000_000 == 0 {
+        if iterations % 10_000_000 == 0 {
             let diff = time.elapsed();
             time = Instant::now();
-            //println!("{:?}", diff.as_millis());
+            println!("{:?}", diff.as_millis());
         }
 
-        simulate_gravity_step(&mut moons, &mut gravitys);
+        simulate_gravity_step(moons, gravitys);
 
-        if initial == moons {
+        if initial == *moons {
             break;
         }
     }
+
+    iterations
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let input = fs::read_to_string("input")?;
+
+    let moons = parse_moons(&input)?;
+    
+
+    let mut moons: [Moon; 4] = moons[..].try_into()?;
+
+    let mut gravitys: [Vec3; 4] = {
+        let mut gravitys = Vec::new();
+        gravitys.resize_with(moons.len(), Default::default);
+        gravitys[..].try_into()?
+    };
+
+    let iterations = find_iterations(&mut moons, &mut gravitys);
 
     println!("{}", iterations);
 
@@ -134,21 +147,44 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_moons, simulate_gravity_step};
+    use std::convert::TryInto;
+    use super::{Moon, parse_moons, simulate_gravity_step, find_iterations};
 
     #[test]
-    fn test_simulate_gravity() {
+    fn test_find_iterations() {
         let input = "<x=-8, y=-10, z=0>
         <x=5, y=5, z=10>
         <x=2, y=-7, z=3>
         <x=9, y=-8, z=-3>";
 
-        let mut moons = parse_moons(input).unwrap();
+        let moons = parse_moons(input).unwrap();
+
+        let mut moons: [Moon; 4] = moons[..].try_into().unwrap();
 
         let mut gravitys = {
             let mut gravitys = Vec::new();
             gravitys.resize_with(moons.len(), Default::default);
-            gravitys.into_boxed_slice()
+            gravitys[..].try_into().unwrap()
+        };
+
+        assert_eq!(find_iterations(&mut moons, &mut gravitys), 4686774924);
+    }
+
+    #[test]
+    fn test_simulate_gravity_b() {
+        let input = "<x=-8, y=-10, z=0>
+        <x=5, y=5, z=10>
+        <x=2, y=-7, z=3>
+        <x=9, y=-8, z=-3>";
+
+        let moons = parse_moons(input).unwrap();
+
+        let mut moons: [Moon; 4] = moons[..].try_into().unwrap();
+
+        let mut gravitys = {
+            let mut gravitys = Vec::new();
+            gravitys.resize_with(moons.len(), Default::default);
+            gravitys[..].try_into().unwrap()
         };
 
         for _ in 0..10 {
