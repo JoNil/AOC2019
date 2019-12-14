@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 int_comp = { path = "../int_comp" }
-pancurses = "0.16"
+crossterm = "0.14"

@@ -1,8 +1,13 @@
+use crossterm::{
+    cursor,
+    style::{style, Color, PrintStyledContent},
+    terminal, ExecutableCommand,
+};
 use int_comp::{IntcodeComputer, IntcodeOutput};
-use pancurses::{initscr, endwin, noecho};
 use std::convert::TryFrom;
 use std::error::Error;
 use std::fs;
+use std::io::stdout;
 use std::thread;
 use std::time::Duration;
 
@@ -23,6 +28,16 @@ impl TileType {
             TileType::Block => '=',
             TileType::Paddle => '_',
             TileType::Ball => 'o',
+        }
+    }
+
+    fn to_color(&self) -> Color {
+        match *self {
+            TileType::Empty => Color::Black,
+            TileType::Wall => Color::Grey,
+            TileType::Block => Color::DarkGreen,
+            TileType::Paddle => Color::Yellow,
+            TileType::Ball => Color::Blue,
         }
     }
 }
@@ -57,13 +72,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut last_ball_x = 0;
     let mut last_paddle_x = 0;
 
-    let window = initscr();
-    window.nodelay(true);
-    noecho();
+    stdout()
+        .execute(terminal::Clear(terminal::ClearType::All))?
+        .execute(cursor::Hide)?;
 
     loop {
-        window.getch();
-
         let input = if last_ball_x < last_paddle_x {
             -1
         } else if last_ball_x > last_paddle_x {
@@ -89,8 +102,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                         last_paddle_x = x;
                     }
 
-                    window.mv(y, x);
-                    window.addch(ty.to_char());
+                    stdout()
+                        .execute(cursor::MoveTo(x as u16, y as u16))?
+                        .execute(PrintStyledContent(style(ty.to_char()).with(ty.to_color())))?;
                 }
             }
             IntcodeOutput::Halt(_) => {
@@ -101,7 +115,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         thread::sleep(Duration::from_millis(10));
     }
 
-    endwin();
+    stdout()
+        .execute(terminal::Clear(terminal::ClearType::All))?
+        .execute(cursor::Show)?;
 
     println!("{}", score);
 
