@@ -2,13 +2,13 @@ use std::collections::VecDeque;
 use std::error::Error;
 use std::fs;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Ingredient {
-    amount: i32,
+    amount: i64,
     name: String,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Reaction {
     inputs: Vec<Ingredient>,
     output: Ingredient,
@@ -47,24 +47,32 @@ fn parse_reactions(input: &str) -> Result<Vec<Reaction>, Box<dyn Error>> {
     Ok(res)
 }
 
-fn find_fuel_for_ore(reactions: &[Reaction], mut ore_amt: i64) -> i32 {
+fn find_fuel_for_ore_inner(
+        reactions: &[Reaction],
+        ore_amt_in: &mut i64,
+        remaining_ingridients_in: &mut Vec<Ingredient>,
+        power: i32) -> i64 {
 
     let mut fuel_produced = 0;
-
-    let mut remaining_ingridients = Vec::<Ingredient>::new();
+    let mut ore_amt = *ore_amt_in;
+    let mut remaining_ingridients = remaining_ingridients_in.clone();
 
     let mut outstanding_requests = VecDeque::new();
     outstanding_requests.push_back(Ingredient {
-        amount: 1,
+        amount: (10i64).pow(power as u32),
         name: "FUEL".to_owned(),
     });
 
     loop {
 
         if outstanding_requests.len() == 0 {
-            fuel_produced += 1;
+            
+            fuel_produced += (10i64).pow(power as u32);
+            *remaining_ingridients_in = remaining_ingridients.clone();
+            *ore_amt_in = ore_amt;
+
             outstanding_requests.push_back(Ingredient {
-                amount: 1,
+                amount: (10i64).pow(power as u32),
                 name: "FUEL".to_owned(),
             });
         }
@@ -129,10 +137,10 @@ fn find_fuel_for_ore(reactions: &[Reaction], mut ore_amt: i64) -> i32 {
                 for input in &reaction.inputs {
 
                     if input.name == "ORE" {
-                        if ore_amt < (times * input.amount) as i64 {
+                        if ore_amt < times * input.amount {
                             return fuel_produced;
                         } else {
-                            ore_amt -= (times * input.amount) as i64;
+                            ore_amt -= times * input.amount;
                         }
                     } else {
                         outstanding_requests.push_back(Ingredient {
@@ -146,6 +154,18 @@ fn find_fuel_for_ore(reactions: &[Reaction], mut ore_amt: i64) -> i32 {
             }
         }
     }
+}
+
+fn find_fuel_for_ore(reactions: &[Reaction], mut ore_amt: i64) -> i32 {
+
+    let mut fuel_produced = 0;
+    let mut remaining_ingridients = Vec::<Ingredient>::new();
+
+    for power in (0..7).rev() {
+        fuel_produced += find_fuel_for_ore_inner(reactions, &mut ore_amt, &mut remaining_ingridients, power);
+    }
+
+    fuel_produced as i32
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
