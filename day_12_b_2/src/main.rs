@@ -122,7 +122,7 @@ fn simulate_gravity_step(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) -> i64
                 let v = (a.vel.x - a.vel.x) as f32;
                 let a = (gravitys[i].x - gravitys[j].x) as f32;
 
-                if a > 0.0 {
+                if a != 0.0 {
                     let x_steps = f32::floor((-v + f32::sqrt(v*v - 4.0*a*p)) / 2.0*a) as i32;
                     
                     if x_steps > 0 {
@@ -136,7 +136,7 @@ fn simulate_gravity_step(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) -> i64
                 let v = (a.vel.y - a.vel.y) as f32;
                 let a = (gravitys[i].y - gravitys[j].y) as f32;
 
-                if a > 0.0 {
+                if a != 0.0 {
                     let y_steps = f32::floor((-v + f32::sqrt(v*v - 4.0*a*p)) / 2.0*a) as i32;
                     
                     if y_steps > 0 {
@@ -150,7 +150,7 @@ fn simulate_gravity_step(moons: &mut [Moon; 4], gravitys: &mut [Vec3; 4]) -> i64
                 let v = (a.vel.z - a.vel.z) as f32;
                 let a = (gravitys[i].z - gravitys[j].z) as f32;
 
-                if a > 0.0 {
+                if a != 0.0 {
                     let z_steps = f32::floor((-v + f32::sqrt(v*v - 4.0*a*p)) / 2.0*a) as i32;
                     
                     if z_steps > 0 {
