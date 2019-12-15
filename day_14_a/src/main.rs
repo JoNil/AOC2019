@@ -48,7 +48,6 @@ fn parse_reactions(input: &str) -> Result<Vec<Reaction>, Box<dyn Error>> {
 }
 
 fn find_ore_amount(reactions: &[Reaction]) -> i32 {
-
     let mut ore = 0;
 
     let mut remaining_ingridients = Vec::<Ingredient>::new();
@@ -60,7 +59,6 @@ fn find_ore_amount(reactions: &[Reaction]) -> i32 {
     });
 
     while outstanding_requests.len() > 0 {
-
         let mut request = outstanding_requests.pop_back().unwrap();
 
         {
@@ -84,8 +82,11 @@ fn find_ore_amount(reactions: &[Reaction]) -> i32 {
             }
 
             if let Some(to_delete) = remaining_ingridient_to_delete {
-                remaining_ingridients = remaining_ingridients.into_iter().filter(|i| i.name != to_delete).collect::<Vec<_>>();
-            }   
+                remaining_ingridients = remaining_ingridients
+                    .into_iter()
+                    .filter(|i| i.name != to_delete)
+                    .collect::<Vec<_>>();
+            }
         }
 
         if request.amount == 0 {
@@ -94,12 +95,10 @@ fn find_ore_amount(reactions: &[Reaction]) -> i32 {
 
         for reaction in reactions {
             if reaction.output.name == request.name {
-
                 let times = (request.amount - 1) / reaction.output.amount + 1;
                 let rest = times * reaction.output.amount - request.amount;
 
                 if rest > 0 {
-
                     let mut found_ingredient = false;
 
                     for ingredient in &mut remaining_ingridients {
@@ -119,7 +118,6 @@ fn find_ore_amount(reactions: &[Reaction]) -> i32 {
                 }
 
                 for input in &reaction.inputs {
-
                     if input.name == "ORE" {
                         ore += times * input.amount
                     } else {
@@ -139,7 +137,6 @@ fn find_ore_amount(reactions: &[Reaction]) -> i32 {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
     let input = fs::read_to_string("input")?;
 
     let reactions = parse_reactions(&input)?;

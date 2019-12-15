@@ -4,7 +4,6 @@ use std::error::Error;
 use std::fs;
 
 fn get_new_dir(dir: (i32, i32), change: i32) -> Result<(i32, i32), Box<dyn Error>> {
-
     Ok(match (dir, change) {
         ((0, 1), 0) => (-1, 0),
         ((-1, 0), 0) => (0, -1),
@@ -20,30 +19,22 @@ fn get_new_dir(dir: (i32, i32), change: i32) -> Result<(i32, i32), Box<dyn Error
     })
 }
 
-fn paint(int_comp: &mut IntcodeComputer) -> Result<i32, Box<dyn Error>>{
-
+fn paint(int_comp: &mut IntcodeComputer) -> Result<i32, Box<dyn Error>> {
     let mut pos = (0, 0);
     let mut dir = (0, 1);
     let mut painted_squares: HashMap<(i32, i32), i32> = HashMap::new();
 
     loop {
-
         let input = match painted_squares.get(&pos) {
-            Some(1) => {
-                [1]
-            }
-            _ => {
-                [0]
-            }
+            Some(1) => [1],
+            _ => [0],
         };
 
         let (color_to_paint, dir_change) = match int_comp.run(&input, Some(2))? {
             IntcodeOutput::Halt(_) => {
                 return Ok(painted_squares.len() as i32);
             }
-            IntcodeOutput::Interrupt(output) => {
-                (output[0], output[1])
-            }
+            IntcodeOutput::Interrupt(output) => (output[0], output[1]),
         };
 
         painted_squares.insert(pos, color_to_paint as i32);

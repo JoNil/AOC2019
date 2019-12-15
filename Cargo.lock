@@ -108,6 +108,21 @@ name = "day_14_b"
 version = "0.1.0"
 
 [[package]]
+name = "day_15_a"
+version = "0.1.0"
+dependencies = [
+ "crossterm 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "int_comp 0.1.0",
+]
+
+[[package]]
+name = "day_15_b"
+version = "0.1.0"
+dependencies = [
+ "int_comp 0.1.0",
+]
+
+[[package]]
 name = "day_1_a"
 version = "0.1.0"
 

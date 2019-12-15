@@ -4,7 +4,6 @@ use std::error::Error;
 use std::fs;
 
 fn get_new_dir(dir: (i32, i32), change: i32) -> Result<(i32, i32), Box<dyn Error>> {
-
     Ok(match (dir, change) {
         ((0, 1), 0) => (-1, 0),
         ((-1, 0), 0) => (0, -1),
@@ -20,8 +19,7 @@ fn get_new_dir(dir: (i32, i32), change: i32) -> Result<(i32, i32), Box<dyn Error
     })
 }
 
-fn paint(int_comp: &mut IntcodeComputer) -> Result<HashMap<(i32, i32), i32>, Box<dyn Error>>{
-
+fn paint(int_comp: &mut IntcodeComputer) -> Result<HashMap<(i32, i32), i32>, Box<dyn Error>> {
     let mut pos = (0, 0);
     let mut dir = (0, 1);
     let mut painted_squares: HashMap<(i32, i32), i32> = HashMap::new();
@@ -29,23 +27,16 @@ fn paint(int_comp: &mut IntcodeComputer) -> Result<HashMap<(i32, i32), i32>, Box
     painted_squares.insert((0, 0), 1);
 
     loop {
-
         let input = match painted_squares.get(&pos) {
-            Some(1) => {
-                [1]
-            }
-            _ => {
-                [0]
-            }
+            Some(1) => [1],
+            _ => [0],
         };
 
         let (color_to_paint, dir_change) = match int_comp.run(&input, Some(2))? {
             IntcodeOutput::Halt(_) => {
                 return Ok(painted_squares);
             }
-            IntcodeOutput::Interrupt(output) => {
-                (output[0], output[1])
-            }
+            IntcodeOutput::Interrupt(output) => (output[0], output[1]),
         };
 
         painted_squares.insert(pos, color_to_paint as i32);
@@ -58,7 +49,6 @@ fn paint(int_comp: &mut IntcodeComputer) -> Result<HashMap<(i32, i32), i32>, Box
 }
 
 fn output_pain(painted_squares: HashMap<(i32, i32), i32>) {
-
     let mut max_x = std::i32::MIN;
     let mut min_x = std::i32::MAX;
 
@@ -66,7 +56,6 @@ fn output_pain(painted_squares: HashMap<(i32, i32), i32>) {
     let mut min_y = std::i32::MAX;
 
     for (x, y) in painted_squares.keys() {
-
         max_x = max_x.max(*x);
         min_x = min_x.min(*x);
 
@@ -81,14 +70,12 @@ fn output_pain(painted_squares: HashMap<(i32, i32), i32>) {
     bitmap.resize_with((width * height) as usize, Default::default);
 
     for ((x, y), value) in painted_squares {
-
         let y = y.abs();
 
-        bitmap[(x + width*y) as usize] = value;
+        bitmap[(x + width * y) as usize] = value;
     }
 
     for chunk in bitmap.chunks(width as usize) {
-
         for pixel in chunk {
             if *pixel == 1 {
                 print!("#");
