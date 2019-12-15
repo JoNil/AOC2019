@@ -211,7 +211,7 @@ fn calculate_fill_time(map: &HashMap<(i32, i32), Tile>) -> Option<i32> {
         time += 1;
     }
 
-    Some(time)
+    Some(time - 1)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
