@@ -1,7 +1,6 @@
 use crossterm::{
     cursor,
-    event::{read, Event, KeyCode, KeyEvent},
-    style::{style, Color, Print, PrintStyledContent},
+    style::{style, Color, PrintStyledContent},
     terminal, ExecutableCommand,
 };
 use int_comp::IntcodeComputer;
@@ -37,7 +36,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let output = int_comp.run(&[], None)?;
 
     let mut map = HashSet::<(i32, i32)>::new();
-    let mut start_pos = (0, 0);
     let mut x = 0;
     let mut y = 0;
 
@@ -55,7 +53,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 x += 1;
             }
             '^' | 'v' | 'V' | '<' | '>' => {
-                start_pos = (x, y);
                 x += 1;
             }
             c => {
@@ -86,7 +83,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     stdout().execute(cursor::MoveTo(0, 0))?;
 
-    println!("{}", intersections.iter().map(|(x, y)| x*y).sum::<i32>());
+    println!("{}", intersections.iter().map(|(x, y)| x * y).sum::<i32>());
 
     Ok(())
 }
