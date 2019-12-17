@@ -103,6 +103,15 @@ pub enum IntcodeOutput {
     Interrupt(Vec<i64>),
 }
 
+impl IntcodeOutput {
+    pub fn data(&self) -> &[i64] {
+        match self {
+            IntcodeOutput::Halt(output) => output,
+            IntcodeOutput::Interrupt(output) => output,
+        }
+    }
+}
+
 pub struct IntcodeComputer {
     pc: usize,
     relative_base: i64,
