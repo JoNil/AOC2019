@@ -46,6 +46,16 @@ fn fft(signal: &[i32]) -> Vec<i32> {
         let signal_len = signal.len();
         let signal_half_len = signal_len / 2;
 
+        //a1 + b1
+        //a2 - b2
+        //a3 + b1 + b3 - b4
+        //a4 + b1 + 2*b3
+
+        //b1 + b2 + b3
+        //b2 + b4
+        //b3
+        //b4
+
         //let a = fft(&signal.iter().skip(1).step_by(2).copied().collect::<Vec<_>>());
         //let b = fft(&signal.iter().step_by(2).copied().collect::<Vec<_>>());
 
