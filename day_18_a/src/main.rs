@@ -44,6 +44,7 @@ impl Tile {
     }
 }
 
+#[derive(Clone)]
 struct State {
     map: HashMap<(i32, i32), Tile>,
     keys: Vec<char>,
@@ -194,28 +195,56 @@ fn calculate_paths_to_reachable_keys(state: &State, start_pos: (i32, i32)) -> Ve
     res
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let input = fs::read_to_string("input")?;
-
-    let (map, mut pos) = parse_map(&input);
-    let mut state = State::new(map);
+fn calculate_shortest_path(mut state: State, mut pos: (i32, i32)) -> i32 {
+   
     let mut moved = 0;
 
     loop {
-        let mut path_to_keys = calculate_paths_to_reachable_keys(&state, pos);
+        let possible_paths = calculate_paths_to_reachable_keys(&state, pos);
+        dbg!(possible_paths.len());
 
-        if path_to_keys.len() == 0 {
+        if possible_paths.len() == 0 {
             break;
         }
 
-        path_to_keys.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
+        let mut smallest_steps = std::i32::MAX;
+        let mut smallest_state = None;
+        let mut smallest_pos = None;
 
-        moved += path_to_keys[0].1.len();
-        pos = *path_to_keys[0].1.last().unwrap();
+        for possible_path in possible_paths {
 
-        state.map.insert(pos, Tile::Ground);
-        state.keys.push(path_to_keys[0].0);
+            let mut new_state = state.clone();
+            new_state.map.insert(pos, Tile::Ground);
+            new_state.keys.push(possible_path.0);
+
+            let new_pos = *possible_path.1.last().unwrap();
+
+            let new_steps = calculate_shortest_path(new_state.clone(), new_pos);
+
+            if new_steps < smallest_steps {
+                smallest_steps = new_steps;
+                smallest_state = Some(new_state);
+                smallest_pos = Some(new_pos);
+            }
+        }
+
+        if let (Some(new_state), Some(new_pos)) = (smallest_state, smallest_pos) {
+            pos = new_pos;
+            state = new_state;
+            moved += smallest_steps;
+        }
     }
+
+    moved
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let input = fs::read_to_string("input")?;
+
+    let (map, pos) = parse_map(&input);
+    let state = State::new(map);
+
+    let shortest_path = calculate_shortest_path(state.clone(), pos);
 
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
@@ -232,7 +261,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .execute(Print('\n'))?;
     }
 
-    println!("Steps: {}", moved);
+    println!("Steps: {}", shortest_path);
 
     Ok(())
 }
