@@ -43,6 +43,14 @@ impl Tile {
             Tile::Door(ch) => style(*ch).with(Color::Red),
         }
     }
+
+    fn get_key(&self) -> Option<char> {
+        if let Tile::Key(ch) = self {
+            Some(*ch)
+        } else {
+            None
+        }
+    }
 }
 
 struct State {
@@ -51,9 +59,9 @@ struct State {
 }
 
 impl State {
-    fn new(input: &str) -> State {
+    fn new(map: HashMap<(i32, i32), Tile>) -> State {
         State {
-            map: HashMap::new(),
+            map: map,
             keys: Vec::new(),
         }
     }
@@ -186,13 +194,24 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (map, start_pos) = parse_map(&input);
 
+    let keys = map.values().filter_map(|tile| tile.get_key()).collect::<Vec<_>>();
+
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
-    for (pos, tile) in map {
+    for (pos, tile) in &map {
         stdout()
             .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
             .execute(PrintStyledContent(tile.to_styled_char()))?;
     }
+
+    {
+        let max_pos = map.keys().max_by(|a, b| a.1.cmp(&b.1)).ok_or("Error")?;
+        stdout()
+            .execute(cursor::MoveTo(max_pos.0 as u16, max_pos.1 as u16))?
+            .execute(Print('\n'))?;
+    }
+
+    println!("keys: {:?}", keys);
 
     Ok(())
 }
