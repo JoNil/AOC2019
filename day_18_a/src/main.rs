@@ -10,14 +10,6 @@ use std::fs;
 use std::io::stdout;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-enum Dir {
-    North,
-    South,
-    West,
-    East,
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 enum Tile {
     Wall,
     Ground,
@@ -213,6 +205,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let keys = map.values().filter_map(|tile| tile.get_key()).collect::<Vec<_>>();
 
     let path_to_keys = calculate_paths_to_reachable_keys(&state, start_pos);
+    let reachable_keys = path_to_keys.iter().map(|(key, path)| (*key, path.len())).collect::<Vec<_>>();
 
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
@@ -238,6 +231,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     println!("keys: {:?}", keys);
+    println!("Reachable Keys: {:?}", reachable_keys);
 
     Ok(())
 }
