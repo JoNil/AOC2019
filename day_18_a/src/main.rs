@@ -39,7 +39,7 @@ impl Tile {
         match self {
             Tile::Wall => style('#').with(Color::Grey),
             Tile::Ground => style('.').with(Color::DarkGrey),
-            Tile::Key(ch) => style(*ch).with(Color::Blue),
+            Tile::Key(ch) => style(*ch).with(Color::Green),
             Tile::Door(ch) => style(*ch).with(Color::Red),
         }
     }
@@ -189,12 +189,30 @@ fn parse_map(input: &str) -> (HashMap<(i32, i32), Tile>, (i32, i32)) {
     (map, start_pos)
 }
 
+fn calculate_paths_to_reachable_keys(state: &State, start_pos: (i32, i32)) -> Vec<(char, Vec<(i32, i32)>)> {
+
+    let mut res = Vec::new();
+
+    for (key_pos, key) in state.map.iter().filter_map(|(pos, tile)| tile.get_key().map(|key| (pos, key))) {
+
+        if let Some(path) = a_star(start_pos, *key_pos, state) {
+            res.push((key, path));
+        }
+    }
+
+    res
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
     let (map, start_pos) = parse_map(&input);
 
+    let state = State::new(map.clone());
+
     let keys = map.values().filter_map(|tile| tile.get_key()).collect::<Vec<_>>();
+
+    let path_to_keys = calculate_paths_to_reachable_keys(&state, start_pos);
 
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
@@ -202,6 +220,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         stdout()
             .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
             .execute(PrintStyledContent(tile.to_styled_char()))?;
+    }
+
+    if let Some((key, path)) = path_to_keys.get(0) {
+        for pos in path {
+            stdout()
+                .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
+                .execute(PrintStyledContent(style(key).with(Color::Blue)))?;
+        }
     }
 
     {
