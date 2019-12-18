@@ -148,6 +148,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "day_18_a"
+version = "0.1.0"
+dependencies = [
+ "crossterm 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "day_18_b"
+version = "0.1.0"
+
+[[package]]
 name = "day_1_a"
 version = "0.1.0"
 
