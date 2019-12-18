@@ -17,12 +17,12 @@ enum Tile {
 }
 
 impl Tile {
-    fn is_passable(&self, state: &State) -> bool {
+    fn is_passable(&self, keys: &[char]) -> bool {
         match self {
             Tile::Wall => false,
             Tile::Ground => true,
             Tile::Key(_) => true,
-            Tile::Door(door) => state.keys.contains(door),
+            Tile::Door(door) => keys.contains(door),
         }
     }
 
@@ -32,29 +32,6 @@ impl Tile {
             Tile::Ground => style('.').with(Color::DarkGrey),
             Tile::Key(ch) => style(*ch).with(Color::Blue),
             Tile::Door(ch) => style(*ch).with(Color::Red),
-        }
-    }
-
-    fn get_key(&self) -> Option<char> {
-        if let Tile::Key(ch) = self {
-            Some(*ch)
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Clone)]
-struct State {
-    map: HashMap<(i32, i32), Tile>,
-    keys: Vec<char>,
-}
-
-impl State {
-    fn new(map: HashMap<(i32, i32), Tile>) -> State {
-        State {
-            map: map,
-            keys: Vec::new(),
         }
     }
 }
@@ -77,7 +54,7 @@ fn huristic(pos: (i32, i32), goal: (i32, i32)) -> i32 {
     (goal.0 - pos.0).abs() + (goal.1 - pos.1).abs()
 }
 
-fn neighbors(pos: (i32, i32), state: &State) -> Vec<(i32, i32)> {
+fn neighbors(pos: (i32, i32), map: &HashMap<(i32, i32), Tile>, keys: &[char]) -> Vec<(i32, i32)> {
     let mut res = Vec::new();
     for candidate in &[
         (pos.0 + 1, pos.1),
@@ -85,8 +62,8 @@ fn neighbors(pos: (i32, i32), state: &State) -> Vec<(i32, i32)> {
         (pos.0, pos.1 + 1),
         (pos.0, pos.1 - 1),
     ] {
-        let tile = *state.map.get(candidate).unwrap_or(&Tile::Wall);
-        if tile.is_passable(&state) {
+        let tile = *map.get(candidate).unwrap_or(&Tile::Wall);
+        if tile.is_passable(keys) {
             res.push(*candidate);
         }
     }
@@ -94,7 +71,12 @@ fn neighbors(pos: (i32, i32), state: &State) -> Vec<(i32, i32)> {
     res
 }
 
-fn a_star(start: (i32, i32), goal: (i32, i32), state: &State) -> Option<Vec<(i32, i32)>> {
+fn a_star(
+    start: (i32, i32),
+    goal: (i32, i32),
+    map: &HashMap<(i32, i32), Tile>,
+    keys: &[char],
+) -> Option<Vec<(i32, i32)>> {
     let mut open_set = HashSet::new();
     open_set.insert(start);
 
@@ -123,7 +105,7 @@ fn a_star(start: (i32, i32), goal: (i32, i32), state: &State) -> Option<Vec<(i32
 
         open_set.remove(&current);
 
-        for neighbor in &neighbors(current, state) {
+        for neighbor in &neighbors(current, map, keys) {
             let tentative_g_score = g_score.get(&current).unwrap_or(&std::i32::MAX) + 1;
 
             if tentative_g_score < *g_score.get(neighbor).unwrap_or(&std::i32::MAX) {
@@ -139,8 +121,15 @@ fn a_star(start: (i32, i32), goal: (i32, i32), state: &State) -> Option<Vec<(i32
     None
 }
 
-fn parse_map(input: &str) -> (HashMap<(i32, i32), Tile>, (i32, i32)) {
+fn parse_map(
+    input: &str,
+) -> (
+    HashMap<(i32, i32), Tile>,
+    (i32, i32),
+    Vec<(char, (i32, i32))>,
+) {
     let mut map = HashMap::<(i32, i32), Tile>::new();
+    let mut keys = Vec::new();
     let mut x = 0;
     let mut y = 0;
     let mut start_pos = (0, 0);
@@ -171,6 +160,7 @@ fn parse_map(input: &str) -> (HashMap<(i32, i32), Tile>, (i32, i32)) {
 
                 if ch.is_ascii_lowercase() {
                     map.insert((x, y), Tile::Key(ch.to_ascii_uppercase()));
+                    keys.push((ch.to_ascii_uppercase(), (x, y)));
                 }
 
                 x += 1;
@@ -178,60 +168,86 @@ fn parse_map(input: &str) -> (HashMap<(i32, i32), Tile>, (i32, i32)) {
         }
     }
 
-    (map, start_pos)
+    (map, start_pos, keys)
 }
 
-fn calculate_paths_to_reachable_keys(state: &State, start_pos: (i32, i32)) -> Vec<(char, Vec<(i32, i32)>)> {
-
+fn calculate_paths_to_reachable_keys(
+    map: &HashMap<(i32, i32), Tile>,
+    start_pos: (i32, i32),
+    remaning_keys: &[(char, (i32, i32))],
+    aquired_keys: &[char],
+) -> Vec<(char, Vec<(i32, i32)>)> {
     let mut res = Vec::new();
 
-    for (key_pos, key) in state.map.iter().filter_map(|(pos, tile)| tile.get_key().map(|key| (pos, key))) {
-
-        if let Some(path) = a_star(start_pos, *key_pos, state) {
-            res.push((key, path));
+    for (key, key_pos) in remaning_keys {
+        if let Some(path) = a_star(start_pos, *key_pos, map, aquired_keys) {
+            res.push((*key, path));
         }
     }
 
     res
 }
 
-fn calculate_shortest_path(mut state: State, mut pos: (i32, i32)) -> i32 {
-   
+fn calculate_shortest_path(
+    map: &HashMap<(i32, i32), Tile>,
+    mut pos: (i32, i32),
+    mut remaning_keys: Vec<(char, (i32, i32))>,
+    mut aquired_keys: Vec<char>,
+) -> i32 {
     let mut moved = 0;
 
     loop {
-        let possible_paths = calculate_paths_to_reachable_keys(&state, pos);
-        dbg!(possible_paths.len());
+        let mut possible_paths =
+            calculate_paths_to_reachable_keys(map, pos, &remaning_keys, &aquired_keys);
+
+        possible_paths.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
 
         if possible_paths.len() == 0 {
             break;
         }
 
         let mut smallest_steps = std::i32::MAX;
-        let mut smallest_state = None;
+        let mut smallest_remaning_keys = None;
+        let mut smallest_aquired_keys = None;
         let mut smallest_pos = None;
 
-        for possible_path in possible_paths {
+        for (new_key, path) in possible_paths.iter().take(1) {
+            let new_remaning_keys = remaning_keys
+                .iter()
+                .copied()
+                .filter(|(key, _)| *key != *new_key)
+                .collect::<Vec<_>>();
+            let new_aquired_keys = aquired_keys
+                .iter()
+                .chain(&[*new_key])
+                .copied()
+                .collect::<Vec<_>>();
 
-            let mut new_state = state.clone();
-            new_state.map.insert(pos, Tile::Ground);
-            new_state.keys.push(possible_path.0);
+            let new_pos = *path.last().unwrap();
 
-            let new_pos = *possible_path.1.last().unwrap();
-
-            let new_steps = calculate_shortest_path(new_state.clone(), new_pos);
+            let new_steps = calculate_shortest_path(
+                map,
+                new_pos,
+                new_remaning_keys.clone(),
+                new_aquired_keys.clone(),
+            ) + path.len() as i32;
 
             if new_steps < smallest_steps {
                 smallest_steps = new_steps;
-                smallest_state = Some(new_state);
+                smallest_remaning_keys = Some(new_remaning_keys);
+                smallest_aquired_keys = Some(new_aquired_keys);
                 smallest_pos = Some(new_pos);
             }
         }
 
-        if let (Some(new_state), Some(new_pos)) = (smallest_state, smallest_pos) {
+        if let (Some(new_remaning_keys), Some(new_aquired_keys), Some(new_pos)) =
+            (smallest_remaning_keys, smallest_aquired_keys, smallest_pos)
+        {
             pos = new_pos;
-            state = new_state;
+            remaning_keys = new_remaning_keys;
+            aquired_keys = new_aquired_keys;
             moved += smallest_steps;
+            println!("{:?}: {}", aquired_keys, moved);
         }
     }
 
@@ -241,21 +257,20 @@ fn calculate_shortest_path(mut state: State, mut pos: (i32, i32)) -> i32 {
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
-    let (map, pos) = parse_map(&input);
-    let state = State::new(map);
+    let (map, pos, keys) = parse_map(&input);
 
-    let shortest_path = calculate_shortest_path(state.clone(), pos);
+    let shortest_path = calculate_shortest_path(&map, pos, keys, Vec::new());
 
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
-    for (pos, tile) in &state.map {
+    for (pos, tile) in &map {
         stdout()
             .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
             .execute(PrintStyledContent(tile.to_styled_char()))?;
     }
 
     {
-        let max_pos = state.map.keys().max_by(|a, b| a.1.cmp(&b.1)).ok_or("Error")?;
+        let max_pos = map.keys().max_by(|a, b| a.1.cmp(&b.1)).ok_or("Error")?;
         stdout()
             .execute(cursor::MoveTo(max_pos.0 as u16, max_pos.1 as u16))?
             .execute(Print('\n'))?;
