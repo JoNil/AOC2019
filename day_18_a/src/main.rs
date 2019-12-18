@@ -1,6 +1,5 @@
 use crossterm::{
     cursor,
-    event::{read, Event, KeyCode, KeyEvent},
     style::{style, Color, Print, PrintStyledContent, StyledContent},
     terminal, ExecutableCommand,
 };
@@ -31,7 +30,7 @@ impl Tile {
         match self {
             Tile::Wall => style('#').with(Color::Grey),
             Tile::Ground => style('.').with(Color::DarkGrey),
-            Tile::Key(ch) => style(*ch).with(Color::Green),
+            Tile::Key(ch) => style(*ch).with(Color::Blue),
             Tile::Door(ch) => style(*ch).with(Color::Red),
         }
     }
@@ -198,40 +197,42 @@ fn calculate_paths_to_reachable_keys(state: &State, start_pos: (i32, i32)) -> Ve
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
-    let (map, start_pos) = parse_map(&input);
+    let (map, mut pos) = parse_map(&input);
+    let mut state = State::new(map);
+    let mut moved = 0;
 
-    let state = State::new(map.clone());
+    loop {
+        let mut path_to_keys = calculate_paths_to_reachable_keys(&state, pos);
 
-    let keys = map.values().filter_map(|tile| tile.get_key()).collect::<Vec<_>>();
+        if path_to_keys.len() == 0 {
+            break;
+        }
 
-    let path_to_keys = calculate_paths_to_reachable_keys(&state, start_pos);
-    let reachable_keys = path_to_keys.iter().map(|(key, path)| (*key, path.len())).collect::<Vec<_>>();
+        path_to_keys.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
+
+        moved += path_to_keys[0].1.len();
+        pos = *path_to_keys[0].1.last().unwrap();
+
+        state.map.insert(pos, Tile::Ground);
+        state.keys.push(path_to_keys[0].0);
+    }
 
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
-    for (pos, tile) in &map {
+    for (pos, tile) in &state.map {
         stdout()
             .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
             .execute(PrintStyledContent(tile.to_styled_char()))?;
     }
 
-    if let Some((key, path)) = path_to_keys.get(0) {
-        for pos in path {
-            stdout()
-                .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
-                .execute(PrintStyledContent(style(key).with(Color::Blue)))?;
-        }
-    }
-
     {
-        let max_pos = map.keys().max_by(|a, b| a.1.cmp(&b.1)).ok_or("Error")?;
+        let max_pos = state.map.keys().max_by(|a, b| a.1.cmp(&b.1)).ok_or("Error")?;
         stdout()
             .execute(cursor::MoveTo(max_pos.0 as u16, max_pos.1 as u16))?
             .execute(Print('\n'))?;
     }
 
-    println!("keys: {:?}", keys);
-    println!("Reachable Keys: {:?}", reachable_keys);
+    println!("Steps: {}", moved);
 
     Ok(())
 }
