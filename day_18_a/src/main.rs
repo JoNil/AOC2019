@@ -251,10 +251,10 @@ fn calculate_shortest_path(
             3
         } else {
 
-            if aquired_keys.len() < 5 {
+            if aquired_keys.len() < 8 {
                 2
             } else {
-                2
+                1
             }
         }
     }) {
@@ -331,7 +331,7 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn test_find_best_monitoring_position() {
+    fn test_calculate_shortest_path() {
         {
             let input = "#########
 #b.A.@.a#
