@@ -175,79 +175,119 @@ fn parse_map(
     (map, start_pos, keys, doors)
 }
 
+#[derive(Hash, Eq, PartialEq)]
+struct CacheKey {
+    pos: (i32, i32),
+    remaning_keys: Vec<(char, (i32, i32))>,
+    aquired_keys: Vec<char>,
+}
+
+#[derive(Copy, Clone)]
+struct Path {
+    key: char,
+    end_pos: (i32, i32),
+    len: i32,
+}
+
 fn calculate_paths_to_reachable_keys(
     map: &HashMap<(i32, i32), Tile>,
+    cache: &mut HashMap<CacheKey, Vec<Path>>,
     start_pos: (i32, i32),
     remaning_keys: &[(char, (i32, i32))],
     aquired_keys: &[char],
-) -> Vec<(char, Vec<(i32, i32)>)> {
+) -> Vec<Path> {
+    let cache_key = CacheKey {
+        pos: start_pos,
+        remaning_keys: remaning_keys.to_owned(),
+        aquired_keys: aquired_keys.to_owned(),
+    };
+
+    if let Some(res) = cache.get(&cache_key) {
+        return res.clone();
+    }
+
     let mut res = Vec::new();
 
     for (key, key_pos) in remaning_keys {
         if let Some(path) = a_star(start_pos, *key_pos, map, aquired_keys) {
-            res.push((*key, path));
+            let res_path = Path {
+                key: *key,
+                end_pos: *path.last().unwrap(),
+                len: path.len() as i32 - 1,
+            };
+
+            res.push(res_path);
         }
     }
+
+    res.sort_by(|a, b| a.len.cmp(&b.len));
+
+    cache.insert(cache_key, res.clone());
 
     res
 }
 
 fn calculate_shortest_path(
     map: &HashMap<(i32, i32), Tile>,
+    cache: &mut HashMap<CacheKey, Vec<Path>>,
     pos: (i32, i32),
     remaning_keys: Vec<(char, (i32, i32))>,
     remaning_doors: Vec<(char, (i32, i32))>,
     aquired_keys: Vec<char>,
 ) -> i32 {
-    let mut possible_paths =
-        calculate_paths_to_reachable_keys(map, pos, &remaning_keys, &aquired_keys);
-
-    let visible_doors =
-        calculate_paths_to_reachable_keys(map, pos, &remaning_doors, &aquired_keys);
+    let possible_paths =
+        calculate_paths_to_reachable_keys(map, cache, pos, &remaning_keys, &aquired_keys);
 
     if possible_paths.len() == 0 {
         return 0;
     }
 
-    possible_paths.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
-
     let mut shortest_path = std::i32::MAX;
 
-    for (new_key, path) in possible_paths.iter().filter(|(key, _)| {
-        if visible_doors.len() == 0 {
-            return true;
-        }
+    for path in possible_paths.iter().take(if aquired_keys.len() == 0 {
+        remaning_keys.len()
+    } else {
+        if aquired_keys.len() < 3 {
+            3
+        } else {
 
-        for (door, _) in &visible_doors {
-            if door == key {
-                return true;
+            if aquired_keys.len() < 5 {
+                2
+            } else {
+                2
             }
         }
-
-        false
-    }).take(if aquired_keys.len() > 4 { 1 } else { if aquired_keys.len() > 2 { 2 } else { 4 }}) {
+    }) {
         let new_remaning_keys = remaning_keys
             .iter()
             .copied()
-            .filter(|(key, _)| *key != *new_key)
+            .filter(|(key, _)| *key != path.key)
             .collect::<Vec<_>>();
         let new_remaning_doors = remaning_doors
             .iter()
             .copied()
-            .filter(|(door, _)| *door != *new_key)
+            .filter(|(door, _)| *door != path.key)
             .collect::<Vec<_>>();
         let new_aquired_keys = aquired_keys
             .iter()
-            .chain(&[*new_key])
+            .chain(&[path.key])
             .copied()
             .collect::<Vec<_>>();
 
-        println!("{:?}", new_aquired_keys);
+        if remaning_keys.len() < 4 {
+            println!("{:?}", new_aquired_keys);
+        }
 
-        let new_pos = *path.last().unwrap();
+        let new_pos = path.end_pos;
 
-        let new_steps = calculate_shortest_path(map, new_pos, new_remaning_keys, new_remaning_doors, new_aquired_keys)
-            + (path.len() as i32 - 1);
+        let new_steps = calculate_shortest_path(
+            map,
+            cache,
+            new_pos,
+            new_remaning_keys,
+            new_remaning_doors,
+            new_aquired_keys,
+        ) + path.len;
 
         if new_steps < shortest_path {
             shortest_path = new_steps;
@@ -261,8 +301,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
     let (map, pos, keys, doors) = parse_map(&input);
+    let mut cache = HashMap::new();
 
-    let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
+    let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, doors, Vec::new());
 
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
@@ -287,6 +328,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::{calculate_shortest_path, parse_map};
+    use std::collections::HashMap;
 
     #[test]
     fn test_find_best_monitoring_position() {
@@ -296,8 +338,10 @@ mod tests {
 #########";
 
             let (map, pos, keys, doors) = parse_map(&input);
+            let mut cache = HashMap::new();
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
+            let shortest_path =
+                calculate_shortest_path(&map, &mut cache, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 8)
         }
@@ -310,8 +354,10 @@ mod tests {
 ########################";
 
             let (map, pos, keys, doors) = parse_map(&input);
+            let mut cache = HashMap::new();
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
+            let shortest_path =
+                calculate_shortest_path(&map, &mut cache, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 86)
         }
@@ -324,8 +370,10 @@ mod tests {
 ########################";
 
             let (map, pos, keys, doors) = parse_map(&input);
+            let mut cache = HashMap::new();
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
+            let shortest_path =
+                calculate_shortest_path(&map, &mut cache, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 132)
         }
@@ -342,8 +390,10 @@ mod tests {
 #################";
 
             let (map, pos, keys, doors) = parse_map(&input);
+            let mut cache = HashMap::new();
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
+            let shortest_path =
+                calculate_shortest_path(&map, &mut cache, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 136)
         }
@@ -357,8 +407,10 @@ mod tests {
 ########################";
 
             let (map, pos, keys, doors) = parse_map(&input);
+            let mut cache = HashMap::new();
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
+            let shortest_path =
+                calculate_shortest_path(&map, &mut cache, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 81)
         }
