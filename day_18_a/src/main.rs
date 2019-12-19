@@ -127,9 +127,11 @@ fn parse_map(
     HashMap<(i32, i32), Tile>,
     (i32, i32),
     Vec<(char, (i32, i32))>,
+    Vec<(char, (i32, i32))>,
 ) {
     let mut map = HashMap::<(i32, i32), Tile>::new();
     let mut keys = Vec::new();
+    let mut doors = Vec::new();
     let mut x = 0;
     let mut y = 0;
     let mut start_pos = (0, 0);
@@ -157,6 +159,7 @@ fn parse_map(
             ch => {
                 if ch.is_ascii_uppercase() {
                     map.insert((x, y), Tile::Door(ch));
+                    doors.push((ch, (x, y)));
                 }
 
                 if ch.is_ascii_lowercase() {
@@ -169,7 +172,7 @@ fn parse_map(
         }
     }
 
-    (map, start_pos, keys)
+    (map, start_pos, keys, doors)
 }
 
 fn calculate_paths_to_reachable_keys(
@@ -193,12 +196,14 @@ fn calculate_shortest_path(
     map: &HashMap<(i32, i32), Tile>,
     pos: (i32, i32),
     remaning_keys: Vec<(char, (i32, i32))>,
+    remaning_doors: Vec<(char, (i32, i32))>,
     aquired_keys: Vec<char>,
 ) -> i32 {
-
-    
     let mut possible_paths =
         calculate_paths_to_reachable_keys(map, pos, &remaning_keys, &aquired_keys);
+
+    let visible_doors =
+        calculate_paths_to_reachable_keys(map, pos, &remaning_doors, &aquired_keys);
 
     if possible_paths.len() == 0 {
         return 0;
@@ -208,11 +213,28 @@ fn calculate_shortest_path(
 
     let mut shortest_path = std::i32::MAX;
 
-    for (new_key, path) in possible_paths.iter() {
+    for (new_key, path) in possible_paths.iter().filter(|(key, _)| {
+        if visible_doors.len() == 0 {
+            return true;
+        }
+
+        for (door, _) in &visible_doors {
+            if door == key {
+                return true;
+            }
+        }
+
+        false
+    }).take(if aquired_keys.len() > 4 { 1 } else { if aquired_keys.len() > 2 { 2 } else { 4 }}) {
         let new_remaning_keys = remaning_keys
             .iter()
             .copied()
             .filter(|(key, _)| *key != *new_key)
+            .collect::<Vec<_>>();
+        let new_remaning_doors = remaning_doors
+            .iter()
+            .copied()
+            .filter(|(door, _)| *door != *new_key)
             .collect::<Vec<_>>();
         let new_aquired_keys = aquired_keys
             .iter()
@@ -224,12 +246,8 @@ fn calculate_shortest_path(
 
         let new_pos = *path.last().unwrap();
 
-        let new_steps = calculate_shortest_path(
-            map,
-            new_pos,
-            new_remaning_keys,
-            new_aquired_keys,
-        ) + (path.len() as i32 - 1);
+        let new_steps = calculate_shortest_path(map, new_pos, new_remaning_keys, new_remaning_doors, new_aquired_keys)
+            + (path.len() as i32 - 1);
 
         if new_steps < shortest_path {
             shortest_path = new_steps;
@@ -240,12 +258,11 @@ fn calculate_shortest_path(
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
     let input = fs::read_to_string("input")?;
 
-    let (map, pos, keys) = parse_map(&input);
+    let (map, pos, keys, doors) = parse_map(&input);
 
-    let shortest_path = calculate_shortest_path(&map, pos, keys, Vec::new());
+    let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
 
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
@@ -269,7 +286,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_map, calculate_shortest_path};
+    use super::{calculate_shortest_path, parse_map};
 
     #[test]
     fn test_find_best_monitoring_position() {
@@ -278,9 +295,9 @@ mod tests {
 #b.A.@.a#
 #########";
 
-            let (map, pos, keys) = parse_map(&input);
+            let (map, pos, keys, doors) = parse_map(&input);
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 8)
         }
@@ -292,9 +309,9 @@ mod tests {
 #d.....................#
 ########################";
 
-            let (map, pos, keys) = parse_map(&input);
+            let (map, pos, keys, doors) = parse_map(&input);
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 86)
         }
@@ -306,9 +323,9 @@ mod tests {
 #.....@.a.B.c.d.A.e.F.g#
 ########################";
 
-            let (map, pos, keys) = parse_map(&input);
+            let (map, pos, keys, doors) = parse_map(&input);
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 132)
         }
@@ -324,9 +341,9 @@ mod tests {
 #l.F..d...h..C.m#
 #################";
 
-            let (map, pos, keys) = parse_map(&input);
+            let (map, pos, keys, doors) = parse_map(&input);
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 136)
         }
@@ -339,9 +356,9 @@ mod tests {
 ###g#h#i################
 ########################";
 
-            let (map, pos, keys) = parse_map(&input);
+            let (map, pos, keys, doors) = parse_map(&input);
 
-            let shortest_path = calculate_shortest_path(&map, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, pos, keys, doors, Vec::new());
 
             assert_eq!(shortest_path, 81)
         }
