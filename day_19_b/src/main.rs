@@ -1,6 +1,6 @@
 use crossterm::{
     cursor,
-    style::{style, Color, Print, PrintStyledContent},
+    style::{style, Color, PrintStyledContent},
     terminal, ExecutableCommand,
 };
 use int_comp::IntcodeComputer;
@@ -22,6 +22,21 @@ fn does_square_fit(pos: (i32, i32), map: &HashMap<(i32, i32), i32>, size: i32) -
     true
 }
 
+fn count_line(pos: (i32, i32), map: &HashMap<(i32, i32), i32>) -> i32 {
+
+    let mut count = 0;
+
+    for i in 1..  {
+        if *map.get(&(pos.0 - i, pos.1)).unwrap_or(&0) != 1 {
+            return count;
+        }
+
+        count += 1;
+    }
+
+    count
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
@@ -32,12 +47,41 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut map: HashMap<(i32, i32), i32> = HashMap::new();
 
-    for x in 0..50 {
-        for y in 0..50 {
-            let output = IntcodeComputer::new(&program).run(&[x as i64, y as i64], None)?;
+    let mut pos = (8, 9);
+    let mut going_down = true;
+    let mut found_blocks = true;
+    let mut consecutive_blocks = 0;
 
-            if output.data().len() > 0 {
-                map.insert((x, y), output.data()[0] as i32);
+    loop {
+        let output = IntcodeComputer::new(&program).run(&[pos.0 as i64, pos.1 as i64], None)?;
+
+        let out = output.data()[0];
+
+        map.insert(pos, out as i32);
+
+        if out == 0 && found_blocks {
+
+            if !going_down {
+                if dbg!(count_line(pos, &map)) > 205 && dbg!(consecutive_blocks) > 205 {
+                    break;
+                }
+            }
+
+            pos.0 += 1;
+            going_down = !going_down;
+            consecutive_blocks = 0;
+            found_blocks = false;
+        } else {
+        
+            if out == 1 {
+                found_blocks = true;
+                consecutive_blocks += 1;
+            } 
+            
+            if going_down {
+                pos.1 += 1;
+            } else {
+                pos.1 -= 1;
             }
         }
     }
@@ -46,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut closest_pos = (std::i32::MAX, std::i32::MAX);
 
     for pos in map.keys() {
-        if does_square_fit(*pos, &map, 3) {
+        if does_square_fit(*pos, &map, 100) {
             if pos.0 + pos.1 < dist {
                 dist = pos.0 + pos.1;
                 closest_pos = *pos;
@@ -66,22 +110,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }))?;
     }
 
-    for x in closest_pos.0..(closest_pos.0 + 3) {
-        for y in closest_pos.1..(closest_pos.1 + 3) {
-            stdout()
-                .execute(cursor::MoveTo(x as u16, y as u16))?
-                .execute(PrintStyledContent(style('#').with(Color::Blue)))?;
-        }
-    }
-
-    {
-        let max_pos = map.keys().max_by(|a, b| a.1.cmp(&b.1)).ok_or("Error")?;
-        stdout()
-            .execute(cursor::MoveTo(max_pos.0 as u16, max_pos.1 as u16))?
-            .execute(Print('\n'))?;
-    }
-
-    println!("{:?}", closest_pos);
+    println!("{:?}: {:?}", closest_pos, closest_pos.0 * 10000 + closest_pos.1);
 
     Ok(())
 }
