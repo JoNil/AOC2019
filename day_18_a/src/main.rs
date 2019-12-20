@@ -240,11 +240,7 @@ fn calculate_shortest_path(
     for path in possible_paths.iter().take(if aquired_keys.len() < 5 {
         4
     } else {
-        if aquired_keys.len() < 8 {
-            2
-        } else {
-            1
-        }
+        2
     }) {
         let new_remaning_keys = remaning_keys
             .iter()
@@ -257,7 +253,7 @@ fn calculate_shortest_path(
             .copied()
             .collect::<Vec<_>>();
 
-        if remaning_keys.len() < 4 {
+        if remaning_keys.len() > 16  {
             println!("{:?}", new_aquired_keys);
         }
 
