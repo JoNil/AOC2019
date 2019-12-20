@@ -187,6 +187,24 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
         }
     }
 
+    let max_wall = map
+        .iter()
+        .filter_map(|(pos, tile)| tile.is_wall().map(|_| pos))
+        .copied()
+        .max_by(|a, b| (a.0 + a.1).cmp(&(b.0 + b.1)))
+        .ok_or("Error")?;
+    let min_wall = map
+        .iter()
+        .filter_map(|(pos, tile)| tile.is_wall().map(|_| pos))
+        .copied()
+        .min_by(|a, b| (a.0 + a.1).cmp(&(b.0 + b.1)))
+        .ok_or("Error")?;
+
+    let is_on_outer_edge = |pos: (i32, i32)| pos.0 == max_wall.0
+        || pos.0 == min_wall.0
+        || pos.1 == max_wall.1
+        || pos.1 == min_wall.1;
+
     for (pos, part) in portal_part.iter() {
         for (other_pos, other_part) in [
             (pos.0 + 1, pos.1),
@@ -211,16 +229,25 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
             .collect::<Vec<_>>();
 
             for (dest_pos, _dest_tile) in candidates.iter().filter(|(_, tile)| tile.is_ground()) {
-                let pos = match (abs_dist(*pos, *dest_pos), abs_dist(*other_pos, *dest_pos)) {
-                    (1, 2) => pos,
-                    (2, 1) => other_pos,
+                let (portal_pos, portal_part, far_part) = match (abs_dist(*pos, *dest_pos), abs_dist(*other_pos, *dest_pos)) {
+                    (1, 2) => (pos, part, other_part),
+                    (2, 1) => (other_pos, other_part, part),
                     _ => return Err("Bad map")?,
                 };
 
-                let mut name = [*part, *other_part];
-                name.sort();
+                let (name, z_diff) = match (portal_pos.0 - dest_pos.0, portal_pos.1 - dest_pos.1, is_on_outer_edge(*dest_pos)) {
+                    (1, 0, true) => ([*portal_part, *far_part], -1),
+                    (1, 0, false) => ([*portal_part, *far_part], 1),
+                    (-1, 0, true) => ([*far_part, *portal_part], -1),
+                    (-1, 0, false) => ([*far_part, *portal_part], 1),
+                    (0, 1, true) => ([*portal_part, *far_part], -1),
+                    (0, 1, false) => ([*portal_part, *far_part], 1),
+                    (0, -1, true) => ([*far_part, *portal_part], -1),
+                    (0, -1, false) => ([*far_part, *portal_part], 1),
+                    a => return Err(format!("Bad map: {:?}", (a, pos, other_pos)))?,
+                };
 
-                map.insert(*pos, Tile::Portal(*dest_pos, name, 0));
+                map.insert(*portal_pos, Tile::Portal(*dest_pos, name, z_diff));
             }
         }
     }
@@ -242,39 +269,6 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
     for (pos, (dest, name, z_diff)) in portals {
         map.insert(pos, Tile::Portal(dest, name, z_diff));
     }
-
-    let max_wall = map
-        .iter()
-        .filter_map(|(pos, tile)| tile.is_wall().map(|_| pos))
-        .copied()
-        .max_by(|a, b| (a.0 + a.1).cmp(&(b.0 + b.1)))
-        .ok_or("Error")?;
-    let min_wall = map
-        .iter()
-        .filter_map(|(pos, tile)| tile.is_wall().map(|_| pos))
-        .copied()
-        .min_by(|a, b| (a.0 + a.1).cmp(&(b.0 + b.1)))
-        .ok_or("Error")?;
-
-    map.iter_mut().for_each(|(_, tile)| {
-        if let Tile::Portal(pos, _, z_dir) = tile {
-            if pos.0 == max_wall.0
-                || pos.0 == min_wall.0
-                || pos.1 == max_wall.1
-                || pos.1 == min_wall.1
-            {
-                *z_dir = 1;
-            }
-        }
-    });
-
-    map.iter_mut().for_each(|(_, tile)| {
-        if let Tile::Portal(_, name, z_dir) = tile {
-            if *z_dir == 0 && name != b"AA" && name != b"ZZ" {
-                *z_dir = -1;
-            }
-        }
-    });
 
     Ok(map)
 }
@@ -299,13 +293,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for (pos, tile) in &map {
         stdout()
-            .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
+            .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
             .execute(PrintStyledContent(tile.to_styled_char()))?;
     }
 
     for pos in &path {
         stdout()
-            .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
+            .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
             .execute(PrintStyledContent(style(pos.2.to_string()).with(Color::Blue)))?;
     }
 
@@ -315,25 +309,39 @@ fn main() -> Result<(), Box<dyn Error>> {
             if let Tile::Portal(pos, name, z_diff) = tile {
                 if *z_diff == 1 {
                     stdout()
-                        .execute(cursor::MoveTo(portal_pos.0 as u16, portal_pos.1 as u16))?
+                        .execute(cursor::MoveTo((2*portal_pos.0 - 1) as u16, portal_pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[0] as char).with(Color::Green),
-                        ))?;
-
-                    stdout()
-                        .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
+                        ))?
+                        .execute(cursor::MoveTo(2*portal_pos.0 as u16, portal_pos.1 as u16))?
+                        .execute(PrintStyledContent(
+                            style(name[1] as char).with(Color::Green),
+                        ))?
+                        .execute(cursor::MoveTo((2*pos.0 - 1) as u16, pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[0].to_ascii_lowercase() as char).with(Color::Green),
+                        ))?
+                        .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
+                        .execute(PrintStyledContent(
+                            style(name[1].to_ascii_lowercase() as char).with(Color::Green),
                         ))?;
                 } else if *z_diff == -1 {
                     stdout()
-                        .execute(cursor::MoveTo(portal_pos.0 as u16, portal_pos.1 as u16))?
-                        .execute(PrintStyledContent(style(name[0] as char).with(Color::Red)))?;
-
-                    stdout()
-                        .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
+                        .execute(cursor::MoveTo((2*portal_pos.0 - 1) as u16, portal_pos.1 as u16))?
+                        .execute(PrintStyledContent(
+                            style(name[0] as char).with(Color::Red),
+                        ))?
+                        .execute(cursor::MoveTo(2*portal_pos.0 as u16, portal_pos.1 as u16))?
+                        .execute(PrintStyledContent(
+                            style(name[1] as char).with(Color::Red),
+                        ))?
+                        .execute(cursor::MoveTo((2*pos.0 - 1) as u16, pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[0].to_ascii_lowercase() as char).with(Color::Red),
+                        ))?
+                        .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
+                        .execute(PrintStyledContent(
+                            style(name[1].to_ascii_lowercase() as char).with(Color::Red),
                         ))?;
 
                     drawn.insert(*name);
