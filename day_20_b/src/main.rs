@@ -235,16 +235,16 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
                     _ => return Err("Bad map")?,
                 };
 
-                let (name, z_diff) = match (portal_pos.0 - dest_pos.0, portal_pos.1 - dest_pos.1, is_on_outer_edge(*dest_pos)) {
-                    (1, 0, true) => ([*portal_part, *far_part], -1),
-                    (1, 0, false) => ([*portal_part, *far_part], 1),
-                    (-1, 0, true) => ([*far_part, *portal_part], -1),
-                    (-1, 0, false) => ([*far_part, *portal_part], 1),
-                    (0, 1, true) => ([*portal_part, *far_part], -1),
-                    (0, 1, false) => ([*portal_part, *far_part], 1),
-                    (0, -1, true) => ([*far_part, *portal_part], -1),
-                    (0, -1, false) => ([*far_part, *portal_part], 1),
-                    a => return Err(format!("Bad map: {:?}", (a, pos, other_pos)))?,
+                let name = match portal_pos.0 - dest_pos.0 + portal_pos.1 - dest_pos.1 {
+                    1 => [*portal_part, *far_part],
+                    -1 => [*far_part, *portal_part],
+                    _ => return Err("Bad map")?,
+                };
+
+                let z_diff = if is_on_outer_edge(*dest_pos) {
+                    -1
+                } else {
+                    1
                 };
 
                 map.insert(*portal_pos, Tile::Portal(*dest_pos, name, z_diff));
