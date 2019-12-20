@@ -228,7 +228,7 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
             .map(|(k, v)| (*k, *v))
             .collect::<Vec<_>>();
 
-            for (dest_pos, _dest_tile) in candidates.iter().filter(|(_, tile)| tile.is_ground()) {
+            for (dest_pos, _) in candidates.iter().filter(|(_, tile)| tile.is_ground()) {
                 let (portal_pos, portal_part, far_part) = match (abs_dist(*pos, *dest_pos), abs_dist(*other_pos, *dest_pos)) {
                     (1, 2) => (pos, part, other_part),
                     (2, 1) => (other_pos, other_part, part),
