@@ -200,10 +200,9 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
         .min_by(|a, b| (a.0 + a.1).cmp(&(b.0 + b.1)))
         .ok_or("Error")?;
 
-    let is_on_outer_edge = |pos: (i32, i32)| pos.0 == max_wall.0
-        || pos.0 == min_wall.0
-        || pos.1 == max_wall.1
-        || pos.1 == min_wall.1;
+    let is_on_outer_edge = |pos: (i32, i32)| {
+        pos.0 == max_wall.0 || pos.0 == min_wall.0 || pos.1 == max_wall.1 || pos.1 == min_wall.1
+    };
 
     for (pos, part) in portal_part.iter() {
         for (other_pos, other_part) in [
@@ -229,11 +228,12 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
             .collect::<Vec<_>>();
 
             for (dest_pos, _) in candidates.iter().filter(|(_, tile)| tile.is_ground()) {
-                let (portal_pos, portal_part, far_part) = match (abs_dist(*pos, *dest_pos), abs_dist(*other_pos, *dest_pos)) {
-                    (1, 2) => (pos, part, other_part),
-                    (2, 1) => (other_pos, other_part, part),
-                    _ => return Err("Bad map")?,
-                };
+                let (portal_pos, portal_part, far_part) =
+                    match (abs_dist(*pos, *dest_pos), abs_dist(*other_pos, *dest_pos)) {
+                        (1, 2) => (pos, part, other_part),
+                        (2, 1) => (other_pos, other_part, part),
+                        _ => return Err("Bad map")?,
+                    };
 
                 let name = match portal_pos.0 - dest_pos.0 + portal_pos.1 - dest_pos.1 {
                     1 => [*portal_part, *far_part],
@@ -241,11 +241,7 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
                     _ => return Err("Bad map")?,
                 };
 
-                let z_diff = if is_on_outer_edge(*dest_pos) {
-                    -1
-                } else {
-                    1
-                };
+                let z_diff = if is_on_outer_edge(*dest_pos) { -1 } else { 1 };
 
                 map.insert(*portal_pos, Tile::Portal(*dest_pos, name, z_diff));
             }
@@ -293,14 +289,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for (pos, tile) in &map {
         stdout()
-            .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
+            .execute(cursor::MoveTo(2 * pos.0 as u16, pos.1 as u16))?
             .execute(PrintStyledContent(tile.to_styled_char()))?;
     }
 
     for pos in &path {
         stdout()
-            .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
-            .execute(PrintStyledContent(style(pos.2.to_string()).with(Color::Blue)))?;
+            .execute(cursor::MoveTo(2 * pos.0 as u16, pos.1 as u16))?
+            .execute(PrintStyledContent(
+                style(pos.2.to_string()).with(Color::Blue),
+            ))?;
     }
 
     {
@@ -309,37 +307,39 @@ fn main() -> Result<(), Box<dyn Error>> {
             if let Tile::Portal(pos, name, z_diff) = tile {
                 if *z_diff == 1 {
                     stdout()
-                        .execute(cursor::MoveTo((2*portal_pos.0 - 1) as u16, portal_pos.1 as u16))?
+                        .execute(cursor::MoveTo(
+                            (2 * portal_pos.0 - 1) as u16,
+                            portal_pos.1 as u16,
+                        ))?
                         .execute(PrintStyledContent(
                             style(name[0] as char).with(Color::Green),
                         ))?
-                        .execute(cursor::MoveTo(2*portal_pos.0 as u16, portal_pos.1 as u16))?
+                        .execute(cursor::MoveTo(2 * portal_pos.0 as u16, portal_pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[1] as char).with(Color::Green),
                         ))?
-                        .execute(cursor::MoveTo((2*pos.0 - 1) as u16, pos.1 as u16))?
+                        .execute(cursor::MoveTo((2 * pos.0 - 1) as u16, pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[0].to_ascii_lowercase() as char).with(Color::Green),
                         ))?
-                        .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
+                        .execute(cursor::MoveTo(2 * pos.0 as u16, pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[1].to_ascii_lowercase() as char).with(Color::Green),
                         ))?;
                 } else if *z_diff == -1 {
                     stdout()
-                        .execute(cursor::MoveTo((2*portal_pos.0 - 1) as u16, portal_pos.1 as u16))?
-                        .execute(PrintStyledContent(
-                            style(name[0] as char).with(Color::Red),
+                        .execute(cursor::MoveTo(
+                            (2 * portal_pos.0 - 1) as u16,
+                            portal_pos.1 as u16,
                         ))?
-                        .execute(cursor::MoveTo(2*portal_pos.0 as u16, portal_pos.1 as u16))?
-                        .execute(PrintStyledContent(
-                            style(name[1] as char).with(Color::Red),
-                        ))?
-                        .execute(cursor::MoveTo((2*pos.0 - 1) as u16, pos.1 as u16))?
+                        .execute(PrintStyledContent(style(name[0] as char).with(Color::Red)))?
+                        .execute(cursor::MoveTo(2 * portal_pos.0 as u16, portal_pos.1 as u16))?
+                        .execute(PrintStyledContent(style(name[1] as char).with(Color::Red)))?
+                        .execute(cursor::MoveTo((2 * pos.0 - 1) as u16, pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[0].to_ascii_lowercase() as char).with(Color::Red),
                         ))?
-                        .execute(cursor::MoveTo(2*pos.0 as u16, pos.1 as u16))?
+                        .execute(cursor::MoveTo(2 * pos.0 as u16, pos.1 as u16))?
                         .execute(PrintStyledContent(
                             style(name[1].to_ascii_lowercase() as char).with(Color::Red),
                         ))?;
