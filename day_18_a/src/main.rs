@@ -237,10 +237,18 @@ fn calculate_shortest_path(
 
     let mut shortest_path = std::i32::MAX;
 
-    for path in possible_paths.iter().take(if aquired_keys.len() < 5 {
-        4
+    for path in possible_paths.iter().take(if aquired_keys.len() < 10 {
+        if aquired_keys.len() < 5 {
+            5
+        } else {
+            3
+        }
     } else {
-        2
+        if possible_paths.len() == remaning_keys.len() {
+            1
+        } else {
+            2
+        }
     }) {
         let new_remaning_keys = remaning_keys
             .iter()
