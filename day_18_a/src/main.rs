@@ -51,10 +51,6 @@ fn reconstruct_path(
     total_path
 }
 
-fn huristic(pos: (i32, i32), goal: (i32, i32)) -> i32 {
-    (goal.0 - pos.0).abs() + (goal.1 - pos.1).abs()
-}
-
 fn neighbors(pos: (i32, i32), map: &HashMap<(i32, i32), Tile>, keys: &[char]) -> Vec<(i32, i32)> {
     let mut res = Vec::new();
     for candidate in &[
@@ -83,20 +79,17 @@ fn a_star(
 
     let mut came_from = HashMap::new();
 
-    let mut g_score = HashMap::new();
-    g_score.insert(start, 0);
-
-    let mut f_score = HashMap::new();
-    f_score.insert(start, huristic(start, goal));
+    let mut score = HashMap::new();
+    score.insert(start, 0);
 
     while !open_set.is_empty() {
         let current = *open_set
             .iter()
             .min_by(|x, y| {
-                f_score
+                score
                     .get(x)
                     .unwrap_or(&std::i32::MAX)
-                    .cmp(f_score.get(y).unwrap_or(&std::i32::MAX))
+                    .cmp(score.get(y).unwrap_or(&std::i32::MAX))
             })
             .unwrap();
 
@@ -107,12 +100,11 @@ fn a_star(
         open_set.remove(&current);
 
         for neighbor in &neighbors(current, map, keys) {
-            let tentative_g_score = g_score.get(&current).unwrap_or(&std::i32::MAX) + 1;
+            let new_score = score.get(&current).unwrap_or(&std::i32::MAX) + 1;
 
-            if tentative_g_score < *g_score.get(neighbor).unwrap_or(&std::i32::MAX) {
+            if new_score < *score.get(neighbor).unwrap_or(&std::i32::MAX) {
                 came_from.insert(*neighbor, current);
-                g_score.insert(*neighbor, tentative_g_score);
-                f_score.insert(*neighbor, tentative_g_score + huristic(*neighbor, goal));
+                score.insert(*neighbor, new_score);
 
                 open_set.insert(*neighbor);
             }
@@ -179,7 +171,6 @@ fn parse_map(
 #[derive(Clone, Hash, Eq, PartialEq)]
 struct CacheKey {
     pos: (i32, i32),
-    remaning_keys: Vec<(char, (i32, i32))>,
     aquired_keys: Vec<char>,
 }
 
@@ -197,10 +188,12 @@ fn calculate_paths_to_reachable_keys<'a>(
     remaning_keys: &[(char, (i32, i32))],
     aquired_keys: &[char],
 ) -> Rc<Vec<Path>> {
+    let mut sorted_aquired_keys = aquired_keys.to_owned();
+    sorted_aquired_keys.sort();
+
     let cache_key = CacheKey {
         pos: start_pos,
-        remaning_keys: remaning_keys.to_owned(),
-        aquired_keys: aquired_keys.to_owned(),
+        aquired_keys: sorted_aquired_keys,
     };
 
     if let Some(res) = cache.get(&cache_key) {
@@ -244,18 +237,15 @@ fn calculate_shortest_path(
 
     let mut shortest_path = std::i32::MAX;
 
-    for path in possible_paths.iter().take(
-        if aquired_keys.len() < 5 {
-            4
+    for path in possible_paths.iter().take(if aquired_keys.len() < 5 {
+        4
+    } else {
+        if aquired_keys.len() < 8 {
+            2
         } else {
-
-            if aquired_keys.len() < 10 {
-                2
-            } else {
-                1
-            }
+            1
         }
-    ) {
+    }) {
         let new_remaning_keys = remaning_keys
             .iter()
             .copied()
@@ -273,13 +263,9 @@ fn calculate_shortest_path(
 
         let new_pos = path.end_pos;
 
-        let new_steps = calculate_shortest_path(
-            map,
-            cache,
-            new_pos,
-            new_remaning_keys,
-            new_aquired_keys,
-        ) + path.len;
+        let new_steps =
+            calculate_shortest_path(map, cache, new_pos, new_remaning_keys, new_aquired_keys)
+                + path.len;
 
         if new_steps < shortest_path {
             shortest_path = new_steps;
@@ -332,8 +318,7 @@ mod tests {
             let (map, pos, keys, _) = parse_map(&input);
             let mut cache = HashMap::new();
 
-            let shortest_path =
-                calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
 
             assert_eq!(shortest_path, 8)
         }
@@ -348,8 +333,7 @@ mod tests {
             let (map, pos, keys, _) = parse_map(&input);
             let mut cache = HashMap::new();
 
-            let shortest_path =
-                calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
 
             assert_eq!(shortest_path, 86)
         }
@@ -364,8 +348,7 @@ mod tests {
             let (map, pos, keys, _) = parse_map(&input);
             let mut cache = HashMap::new();
 
-            let shortest_path =
-                calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
 
             assert_eq!(shortest_path, 132)
         }
@@ -384,8 +367,7 @@ mod tests {
             let (map, pos, keys, _) = parse_map(&input);
             let mut cache = HashMap::new();
 
-            let shortest_path =
-                calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
 
             assert_eq!(shortest_path, 136)
         }
@@ -401,8 +383,7 @@ mod tests {
             let (map, pos, keys, _) = parse_map(&input);
             let mut cache = HashMap::new();
 
-            let shortest_path =
-                calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
+            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
 
             assert_eq!(shortest_path, 81)
         }
