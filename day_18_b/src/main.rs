@@ -118,7 +118,7 @@ fn parse_map(
     input: &str,
 ) -> (
     HashMap<(i32, i32), Tile>,
-    (i32, i32),
+    [(i32, i32); 4],
     Vec<(char, (i32, i32))>,
     Vec<(char, (i32, i32))>,
 ) {
@@ -127,7 +127,8 @@ fn parse_map(
     let mut doors = Vec::new();
     let mut x = 0;
     let mut y = 0;
-    let mut start_pos = (0, 0);
+    let mut start_pos = [(0, 0); 4];
+    let mut start_pos_index = 0;
 
     for ch in input.chars() {
         match ch {
@@ -145,7 +146,8 @@ fn parse_map(
             }
             '@' => {
                 map.insert((x, y), Tile::Ground);
-                start_pos = (x, y);
+                start_pos[start_pos_index] = (x, y);
+                start_pos_index += 1;
                 x += 1;
             }
             ' ' => {}
@@ -224,12 +226,20 @@ fn calculate_paths_to_reachable_keys<'a>(
 fn calculate_shortest_path(
     map: &HashMap<(i32, i32), Tile>,
     cache: &mut HashMap<CacheKey, Rc<Vec<Path>>>,
-    pos: (i32, i32),
+    pos: [(i32, i32); 4],
     remaning_keys: Vec<(char, (i32, i32))>,
     aquired_keys: Vec<char>,
 ) -> i32 {
-    let possible_paths =
-        calculate_paths_to_reachable_keys(map, cache, pos, &remaning_keys, &aquired_keys);
+    let mut possible_paths = Vec::new();
+
+    for i in 0..4 {
+        let paths = calculate_paths_to_reachable_keys(map, cache, pos[i], &remaning_keys, &aquired_keys);
+        possible_paths.reserve(paths.len());
+
+        for path in paths.iter() {
+            possible_paths.push((i, *path));
+        }
+    }
 
     if possible_paths.len() == 0 {
         return 0;
@@ -237,7 +247,7 @@ fn calculate_shortest_path(
 
     let mut shortest_path = std::i32::MAX;
 
-    for path in possible_paths.iter().take(if aquired_keys.len() < 10 {
+    for (i, path) in possible_paths.iter().take(if aquired_keys.len() < 10 {
         if aquired_keys.len() < 5 {
             5
         } else {
@@ -265,7 +275,8 @@ fn calculate_shortest_path(
             println!("{:?}", new_aquired_keys);
         }
 
-        let new_pos = path.end_pos;
+        let mut new_pos = pos;
+        new_pos[*i] = path.end_pos;
 
         let new_steps =
             calculate_shortest_path(map, cache, new_pos, new_remaning_keys, new_aquired_keys)
@@ -313,11 +324,15 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn test_calculate_shortest_path() {
+    fn test_calculate_shortest_path_b() {
         {
-            let input = "#########
-#b.A.@.a#
-#########";
+            let input = "#######
+#a.#Cd#
+##@#@##
+#######
+##@#@##
+#cB#Ab#
+#######";
 
             let (map, pos, keys, _) = parse_map(&input);
             let mut cache = HashMap::new();
@@ -325,71 +340,6 @@ mod tests {
             let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
 
             assert_eq!(shortest_path, 8)
-        }
-
-        {
-            let input = "########################
-#f.D.E.e.C.b.A.@.a.B.c.#
-######################.#
-#d.....................#
-########################";
-
-            let (map, pos, keys, _) = parse_map(&input);
-            let mut cache = HashMap::new();
-
-            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
-
-            assert_eq!(shortest_path, 86)
-        }
-
-        {
-            let input = "########################
-#...............b.C.D.f#
-#.######################
-#.....@.a.B.c.d.A.e.F.g#
-########################";
-
-            let (map, pos, keys, _) = parse_map(&input);
-            let mut cache = HashMap::new();
-
-            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
-
-            assert_eq!(shortest_path, 132)
-        }
-
-        {
-            let input = "#################
-#i.G..c...e..H.p#
-########.########
-#j.A..b...f..D.o#
-########@########
-#k.E..a...g..B.n#
-########.########
-#l.F..d...h..C.m#
-#################";
-
-            let (map, pos, keys, _) = parse_map(&input);
-            let mut cache = HashMap::new();
-
-            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
-
-            assert_eq!(shortest_path, 136)
-        }
-
-        {
-            let input = "########################
-#@..............ac.GI.b#
-###d#e#f################
-###A#B#C################
-###g#h#i################
-########################";
-
-            let (map, pos, keys, _) = parse_map(&input);
-            let mut cache = HashMap::new();
-
-            let shortest_path = calculate_shortest_path(&map, &mut cache, pos, keys, Vec::new());
-
-            assert_eq!(shortest_path, 81)
         }
     }
 }
