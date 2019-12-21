@@ -1,13 +1,6 @@
-use crossterm::{
-    cursor,
-    style::{style, Color, Print, PrintStyledContent},
-    terminal, ExecutableCommand,
-};
 use int_comp::IntcodeComputer;
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
-use std::io::stdout;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
@@ -17,9 +10,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map(|v| v.trim().parse::<i64>())
         .collect::<Result<Vec<_>, _>>()?;
 
-    let mut map: HashMap<(i64, i64), i64> = HashMap::new();
+    let input = "NOT A T
+NOT T T
+AND B T
+AND C T
+NOT D J
+OR J T
+NOT T J
+WALK
+";
 
-    IntcodeComputer::new(&program).run(&[x, y], None)?;
+    let mut incode = IntcodeComputer::new(&program);
+    
+    let output = incode.run(&input.chars().map(|c| c as i64).collect::<Vec<_>>(), None)?;
+
+    for data in output.data() {
+        print!("{}", *data as u8 as char);
+    }
+
+    println!("");
+
+    println!("{}", output.data().last().ok_or("No Output")?);
 
     Ok(())
 }
