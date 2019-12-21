@@ -2,24 +2,25 @@ use std::error::Error;
 use std::fs;
 
 fn parse_input(input: &str) -> Result<Vec<i32>, Box<dyn Error>> {
-    input.trim().chars().map(|c| c.to_digit(10).map(|d| d as i32).ok_or("Not Digit".into())).collect::<Result<Vec<_>, _>>()
+    input
+        .trim()
+        .chars()
+        .map(|c| c.to_digit(10).map(|d| d as i32).ok_or("Not Digit".into()))
+        .collect::<Result<Vec<_>, _>>()
 }
 
 fn fft_inner(signal: &[i32]) -> Vec<i32> {
-
     let mut out = Vec::new();
     out.resize_with(signal.len(), Default::default);
 
     let pattern = [0, 1, 0, -1];
 
     for (i, out_digit) in out.iter_mut().enumerate() {
-
         let mut sum = 0;
         let mut pattern_counter = i + 1;
         let mut pattern_digit = 1;
 
         for in_digit in &signal[i..] {
-
             if pattern_counter == 0 {
                 pattern_counter = i + 1;
                 pattern_digit = (pattern_digit + 1) % pattern.len();
@@ -37,9 +38,7 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
 }
 
 fn fft(signal: &[i32]) -> Vec<i32> {
-
     if signal.len() > 4 {
-
         let mut out = Vec::new();
         out.resize_with(signal.len(), Default::default);
 
@@ -67,7 +66,6 @@ fn fft(signal: &[i32]) -> Vec<i32> {
         }
 
         for i in (signal_half_len..signal_len).rev() {
-
             if i + 1 < signal_len {
                 out[i] = (out[i + 1] + b[i % signal_half_len]).abs() % 10;
             } else {
@@ -76,14 +74,12 @@ fn fft(signal: &[i32]) -> Vec<i32> {
         }
 
         out
-
     } else {
         fft_inner(&signal)
     }
 }
 
 fn fft_phases(mut signal: Vec<i32>, phases: i32) -> Vec<i32> {
-
     for i in 0..phases {
         dbg!(i);
         signal = fft(&signal);
@@ -93,8 +89,10 @@ fn fft_phases(mut signal: Vec<i32>, phases: i32) -> Vec<i32> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
-    assert_eq!(fft_phases(parse_input("12345678").unwrap(), 4), [0, 1, 0, 2, 9, 4, 9, 8]);
+    assert_eq!(
+        fft_phases(parse_input("12345678").unwrap(), 4),
+        [0, 1, 0, 2, 9, 4, 9, 8]
+    );
 
     let input = fs::read_to_string("input")?;
 
@@ -114,9 +112,30 @@ mod tests {
 
     #[test]
     fn test_fft() {
-        assert_eq!(fft_phases(parse_input("12345678").unwrap(), 4), [0, 1, 0, 2, 9, 4, 9, 8]);
-        assert_eq!(fft_phases(parse_input("80871224585914546619083218645595").unwrap(), 100)[..8], [2, 4, 1, 7, 6, 1, 7, 6]);
-        assert_eq!(fft_phases(parse_input("19617804207202209144916044189917").unwrap(), 100)[..8], [7, 3, 7, 4, 5, 4, 1, 8]);
-        assert_eq!(fft_phases(parse_input("69317163492948606335995924319873").unwrap(), 100)[..8], [5, 2, 4, 3, 2, 1, 3, 3]);
+        assert_eq!(
+            fft_phases(parse_input("12345678").unwrap(), 4),
+            [0, 1, 0, 2, 9, 4, 9, 8]
+        );
+        assert_eq!(
+            fft_phases(
+                parse_input("80871224585914546619083218645595").unwrap(),
+                100
+            )[..8],
+            [2, 4, 1, 7, 6, 1, 7, 6]
+        );
+        assert_eq!(
+            fft_phases(
+                parse_input("19617804207202209144916044189917").unwrap(),
+                100
+            )[..8],
+            [7, 3, 7, 4, 5, 4, 1, 8]
+        );
+        assert_eq!(
+            fft_phases(
+                parse_input("69317163492948606335995924319873").unwrap(),
+                100
+            )[..8],
+            [5, 2, 4, 3, 2, 1, 3, 3]
+        );
     }
 }

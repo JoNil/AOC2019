@@ -10,7 +10,6 @@ use std::fs;
 use std::io::stdout;
 
 fn does_square_fit(pos: (i32, i32), map: &HashMap<(i32, i32), i32>, size: i32) -> bool {
-
     for x in pos.0..(pos.0 + size) {
         for y in pos.1..(pos.1 + size) {
             if *map.get(&(x, y)).unwrap_or(&0) != 1 {
@@ -23,10 +22,9 @@ fn does_square_fit(pos: (i32, i32), map: &HashMap<(i32, i32), i32>, size: i32) -
 }
 
 fn count_line(pos: (i32, i32), map: &HashMap<(i32, i32), i32>) -> i32 {
-
     let mut count = 0;
 
-    for i in 1..  {
+    for i in 1.. {
         if *map.get(&(pos.0 - i, pos.1)).unwrap_or(&0) != 1 {
             return count;
         }
@@ -60,7 +58,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         map.insert(pos, out as i32);
 
         if out == 0 && found_blocks {
-
             if !going_down {
                 if dbg!(count_line(pos, &map)) > 205 && dbg!(consecutive_blocks) > 205 {
                     break;
@@ -72,12 +69,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             consecutive_blocks = 0;
             found_blocks = false;
         } else {
-        
             if out == 1 {
                 found_blocks = true;
                 consecutive_blocks += 1;
-            } 
-            
+            }
+
             if going_down {
                 pos.1 += 1;
             } else {
@@ -110,7 +106,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             }))?;
     }
 
-    println!("{:?}: {:?}", closest_pos, closest_pos.0 * 10000 + closest_pos.1);
+    println!(
+        "{:?}: {:?}",
+        closest_pos,
+        closest_pos.0 * 10000 + closest_pos.1
+    );
 
     Ok(())
 }

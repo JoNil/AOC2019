@@ -193,8 +193,7 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
             .collect::<Vec<_>>();
 
             for (dest_pos, _dest_tile) in candidates.iter().filter(|(_, tile)| tile.is_ground()) {
-                let pos = match (abs_dist(*pos, *dest_pos), abs_dist(*other_pos, *dest_pos))
-                {
+                let pos = match (abs_dist(*pos, *dest_pos), abs_dist(*other_pos, *dest_pos)) {
                     (1, 2) => pos,
                     (2, 1) => other_pos,
                     _ => return Err("Bad map")?,
@@ -208,7 +207,10 @@ fn parse_map(input: &str) -> Result<HashMap<(i32, i32), Tile>, Box<dyn Error>> {
         }
     }
 
-    let mut portals = map.iter().filter_map(|(pos, tile) | tile.get_portal().map(|portal| (*pos, portal))).collect::<Vec<_>>();
+    let mut portals = map
+        .iter()
+        .filter_map(|(pos, tile)| tile.get_portal().map(|portal| (*pos, portal)))
+        .collect::<Vec<_>>();
 
     for (a, (a_pos, (a_dest, a_name))) in portals.clone().into_iter().enumerate() {
         for (b, (b_pos, (b_dest, b_name))) in portals.clone().into_iter().enumerate() {
@@ -260,25 +262,28 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut drawn = HashSet::new();
         for (portal_pos, tile) in &map {
             if let Tile::Portal(pos, name) = tile {
-
                 if drawn.contains(name) {
-
                     stdout()
                         .execute(cursor::MoveTo(portal_pos.0 as u16, portal_pos.1 as u16))?
-                        .execute(PrintStyledContent(style(name[0] as char).with(Color::Green)))?;
-                        
+                        .execute(PrintStyledContent(
+                            style(name[0] as char).with(Color::Green),
+                        ))?;
+
                     stdout()
                         .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
-                        .execute(PrintStyledContent(style(name[0].to_ascii_lowercase() as char).with(Color::Green)))?;
-
+                        .execute(PrintStyledContent(
+                            style(name[0].to_ascii_lowercase() as char).with(Color::Green),
+                        ))?;
                 } else {
                     stdout()
                         .execute(cursor::MoveTo(portal_pos.0 as u16, portal_pos.1 as u16))?
                         .execute(PrintStyledContent(style(name[0] as char).with(Color::Red)))?;
-                        
+
                     stdout()
                         .execute(cursor::MoveTo(pos.0 as u16, pos.1 as u16))?
-                        .execute(PrintStyledContent(style(name[0].to_ascii_lowercase() as char).with(Color::Red)))?;
+                        .execute(PrintStyledContent(
+                            style(name[0].to_ascii_lowercase() as char).with(Color::Red),
+                        ))?;
 
                     drawn.insert(*name);
                 }

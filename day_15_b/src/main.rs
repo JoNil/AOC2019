@@ -153,7 +153,6 @@ fn update(
 
     if output == Tile::Wall {
         res.push((new_pos, '#', Color::Grey));
-        
     } else {
         res.push((old_pos, '.', Color::Grey));
         res.push((new_pos, 'D', Color::Grey));
@@ -161,7 +160,6 @@ fn update(
     }
 
     if let Some(path_to_home) = a_star((0, 0), new_pos, map) {
-
         for pos in last_path_to_home.iter() {
             res.push((*pos, '.', Color::Grey));
         }
@@ -179,11 +177,10 @@ fn update(
 const DRAW_OFFSET: (i32, i32) = (50, 20);
 
 fn calculate_fill_time(map: &HashMap<(i32, i32), Tile>) -> Option<i32> {
-
     let mut map = map.clone();
 
     let mut open_list = Vec::new();
-    
+
     for (pos, tile) in map.iter() {
         if *tile == Tile::GroundOxygen {
             open_list.push(*pos);
@@ -194,11 +191,9 @@ fn calculate_fill_time(map: &HashMap<(i32, i32), Tile>) -> Option<i32> {
     let mut time = 0;
 
     while !open_list.is_empty() {
-
         let mut new_open_list = Vec::new();
 
         for current in open_list {
-
             map.insert(current, Tile::Wall);
 
             for neighbor in &neighbors(current, &map) {
@@ -260,7 +255,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }) => {
                 println!("Fill Time: {:?}", calculate_fill_time(&map));
                 continue;
-            },
+            }
             _ => continue,
         };
 
@@ -271,7 +266,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         };
 
-        if let Some(draw_instructions) = update(&mut pos, &mut map, &mut last_path_to_home, input, output) {
+        if let Some(draw_instructions) =
+            update(&mut pos, &mut map, &mut last_path_to_home, input, output)
+        {
             for (pos, ch, color) in draw_instructions {
                 stdout()
                     .execute(cursor::MoveTo(

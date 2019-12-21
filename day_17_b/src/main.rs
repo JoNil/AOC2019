@@ -12,7 +12,6 @@ enum Dir {
 }
 
 impl Dir {
-
     fn get_next(&self, pos: (i32, i32)) -> (i32, i32) {
         match *self {
             Dir::Right => (pos.0 + 1, pos.1),
@@ -48,9 +47,7 @@ enum Line {
 }
 
 impl Line {
-
     fn calculate(mut start_pos: (i32, i32), map: &HashMap<(i32, i32), char>) -> Vec<Line> {
-        
         let mut lines = Vec::new();
 
         let mut current_pos = start_pos;
@@ -58,7 +55,6 @@ impl Line {
         let mut current_dir = Dir::Left;
 
         loop {
-
             let next_pos = current_dir.get_next(current_pos);
             let next_char = *map.get(&next_pos).unwrap_or(&'.');
 
@@ -67,12 +63,11 @@ impl Line {
                 current_len += 1;
                 continue;
             } else {
-
                 lines.push(current_dir.get_line(start_pos, current_len));
 
                 start_pos = current_pos;
                 current_len = 0;
-                
+
                 let mut found_new_dir = false;
 
                 for maybe_dir in &current_dir.get_possible_out_dirs() {
@@ -104,13 +99,11 @@ enum Instruction {
 
 impl Instruction {
     fn calculate(segments: &[Line]) -> Vec<Instruction> {
-
         let mut res = Vec::new();
 
         let mut current_dir = Dir::Up;
 
         for segment in segments {
-
             match (segment, current_dir) {
                 (Line::Horiz(_, len), Dir::Up) => {
                     if *len > 0 {
@@ -120,7 +113,7 @@ impl Instruction {
                         res.push(Instruction::Left(len.abs()));
                         current_dir = Dir::Left;
                     }
-                },
+                }
                 (Line::Horiz(_, len), Dir::Down) => {
                     if *len > 0 {
                         res.push(Instruction::Left(len.abs()));
@@ -129,7 +122,7 @@ impl Instruction {
                         res.push(Instruction::Right(len.abs()));
                         current_dir = Dir::Left;
                     }
-                },
+                }
                 (Line::Verti(_, len), Dir::Left) => {
                     if *len > 0 {
                         res.push(Instruction::Left(len.abs()));
@@ -138,7 +131,7 @@ impl Instruction {
                         res.push(Instruction::Right(len.abs()));
                         current_dir = Dir::Up;
                     }
-                },
+                }
                 (Line::Verti(_, len), Dir::Right) => {
                     if *len > 0 {
                         res.push(Instruction::Right(len.abs()));
@@ -147,7 +140,7 @@ impl Instruction {
                         res.push(Instruction::Left(len.abs()));
                         current_dir = Dir::Up;
                     }
-                },
+                }
                 _ => panic!("Bad dir"),
             }
         }
@@ -212,7 +205,7 @@ y
     let output = int_comp.run(&input.chars().map(|c| c as i64).collect::<Vec<_>>(), None)?;
 
     for ch in output.data().iter().map(|c| *c as u8 as char) {
-       print!("{}", ch);
+        print!("{}", ch);
     }
 
     println!("\n{}", output.data().last().ok_or("No output")?);

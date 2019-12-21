@@ -233,7 +233,8 @@ fn calculate_shortest_path(
     let mut possible_paths = Vec::new();
 
     for i in 0..4 {
-        let paths = calculate_paths_to_reachable_keys(map, cache, pos[i], &remaning_keys, &aquired_keys);
+        let paths =
+            calculate_paths_to_reachable_keys(map, cache, pos[i], &remaning_keys, &aquired_keys);
         possible_paths.reserve(paths.len());
 
         for path in paths.iter() {
@@ -271,7 +272,7 @@ fn calculate_shortest_path(
             .copied()
             .collect::<Vec<_>>();
 
-        if remaning_keys.len() > 16  {
+        if remaning_keys.len() > 16 {
             println!("{:?}", new_aquired_keys);
         }
 

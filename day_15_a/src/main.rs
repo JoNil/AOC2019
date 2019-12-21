@@ -173,7 +173,6 @@ fn update(
     }
 
     if let Some(path_to_home) = a_star((0, 0), new_pos, map) {
-
         for pos in last_path_to_home.iter() {
             res.push((*pos, '.', Color::Grey));
         }
@@ -240,7 +239,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         };
 
-        if let Some(draw_instructions) = update(&mut pos, &mut map, &mut last_path_to_home, input, output) {
+        if let Some(draw_instructions) =
+            update(&mut pos, &mut map, &mut last_path_to_home, input, output)
+        {
             for (pos, ch, color) in draw_instructions {
                 stdout()
                     .execute(cursor::MoveTo(

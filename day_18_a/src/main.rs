@@ -261,7 +261,7 @@ fn calculate_shortest_path(
             .copied()
             .collect::<Vec<_>>();
 
-        if remaning_keys.len() > 16  {
+        if remaning_keys.len() > 16 {
             println!("{:?}", new_aquired_keys);
         }
 
