@@ -38,23 +38,7 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
 }
 
 fn fft(signal: &[i32]) -> Vec<i32> {
-    if signal.len() > 32 {
-        let mut out = Vec::new();
-        out.resize_with(signal.len(), Default::default);
-
-        let signal_half_len = signal.len() / 2;
-
-        let a = fft(&signal[..signal_half_len]);
-        let b = fft(&signal[signal_half_len..]);
-
-        for (i, out_digit) in out[..signal_half_len].iter_mut().enumerate() {
-            *out_digit = (a[i] + b[i]).abs() % 10;
-        }
-
-        out
-    } else {
-        fft_inner(&signal)
-    }
+    fft_inner(&signal)
 }
 
 fn fft_phases(mut signal: Vec<i32>, phases: i32) -> Vec<i32> {
