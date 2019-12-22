@@ -45,32 +45,29 @@ fn fft(signal: &[i32]) -> Vec<i32> {
         let signal_len = signal.len();
         let signal_half_len = signal_len / 2;
 
-        //a1 + b1
-        //a2 - b2
-        //a3 + b1 + b3 - b4
-        //a4 + b1 + 2*b3
-
-        //b1 + b2 + b3
-        //b2 + b4
-        //b3
-        //b4
-
-        //let a = fft(&signal.iter().skip(1).step_by(2).copied().collect::<Vec<_>>());
-        //let b = fft(&signal.iter().step_by(2).copied().collect::<Vec<_>>());
-
         let a = fft(&signal[..signal_half_len]);
         let b = fft(&signal[signal_half_len..]);
 
-        for (i, out_digit) in out[..signal_half_len].iter_mut().enumerate() {
-            *out_digit = (a[i] + b[i]).abs() % 10;
+        for (i, out_digit) in out[..(signal_half_len/2)].iter_mut().enumerate() {
+
+            if signal_len / (i*2 + 2) > 2 {
+                *out_digit = (a[i] - b[i]).abs() % 10;
+            } else {
+                *out_digit = (a[i] + b[i]).abs() % 10;
+            }
         }
 
-        for i in (signal_half_len..signal_len).rev() {
-            if i + 1 < signal_len {
-                out[i] = (out[i + 1] + b[i % signal_half_len]).abs() % 10;
-            } else {
-                out[i] = (b[i % signal_half_len]).abs() % 10;
-            }
+        let mut last = 0;
+
+        for (i, out_digit) in out[signal_half_len..].iter_mut().enumerate().rev() {
+            last = (last + signal[signal_half_len + i]).abs() % 10;
+            *out_digit = last;
+        }
+
+        for (i, out_digit) in out[(signal_half_len/2)..signal_half_len].iter_mut().enumerate().rev() {
+            last = (last + signal[signal_half_len/2 + i]).abs() % 10;
+            
+            *out_digit = last;
         }
 
         out
