@@ -29,11 +29,17 @@ impl Operation {
                     }
                 }
 
-                res
-            }
-            &Operation::Cut(num) => {
+                //[0, 3, 6, 9, 2, 5, 8, 1, 4, 7]
 
-                let num = -num as i64;
+                dbg!(num);
+                dbg!(tracked_pos);
+                dbg!(len);
+
+                dbg!(res)
+            }
+            &Operation::Cut(val) => {
+
+                let num = -val as i64;
 
                 if num > 0 {
 
@@ -45,12 +51,12 @@ impl Operation {
                     
                 } else {
 
-                    let num = len - num.abs();
+                    let inv_num = num.abs();
 
-                    if tracked_pos > num  {
-                        tracked_pos + len - num
+                    if len - dbg!(inv_num) > tracked_pos {
+                        tracked_pos + inv_num
                     } else {
-                        tracked_pos - num
+                        tracked_pos - len + inv_num
                     }
                 }
             }
@@ -87,6 +93,7 @@ fn parse_operations(input: &str) -> Vec<Operation> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+
     let input = fs::read_to_string("input")?;
 
     let mut operations = parse_operations(&input);
@@ -95,7 +102,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut tracked_pos = 2020;
     let stack_len = 119_315_717_514_047_i64;
 
-    for i in 0..101_741_582_076_661_i64 {
+    for _i in 0..101_741_582_076_661_i64 {
         for operation in &operations {
             tracked_pos = operation.apply(tracked_pos, stack_len);
         }
@@ -111,7 +118,7 @@ mod tests {
     use super::{parse_operations};
 
     #[test]
-    fn test_22_a() {
+    fn test_22_b() {
         {
             let input = "deal with increment 7
                 deal into new stack
@@ -120,14 +127,17 @@ mod tests {
             let mut operations = parse_operations(&input);
             operations.reverse();
 
-            let mut res = 9;
-            let stack_len = 10;
+            let inputs = [0, 3, 6, 9, 2, 5, 8, 1, 4, 7];
 
-            for operation in &operations {
-                res = operation.apply(res, stack_len);
+            for (index, input) in inputs.iter().enumerate() {
+
+                let mut res = *input;
+                for operation in &operations {
+                    res = operation.apply(res, inputs.len() as i64);
+                }
+
+                assert_eq!(res, index as i64);
             }
-
-            assert_eq!(res, 7);
         }
 
         {
@@ -138,14 +148,17 @@ mod tests {
             let mut operations = parse_operations(&input);
             operations.reverse();
 
-            let mut res = 9;
-            let stack_len = 10;
+            let inputs = [3, 0, 7, 4, 1, 8, 5, 2, 9, 6];
 
-            for operation in &operations {
-                res = operation.apply(res, stack_len);
+            for (index, input) in inputs.iter().enumerate() {
+
+                let mut res = *input;
+                for operation in &operations {
+                    res = operation.apply(res, inputs.len() as i64);
+                }
+
+                assert_eq!(res, index as i64);
             }
-
-            assert_eq!(res, 6);
         }
 
         {
@@ -156,14 +169,17 @@ mod tests {
             let mut operations = parse_operations(&input);
             operations.reverse();
 
-            let mut res = 9;
-            let stack_len = 10;
+            let inputs = [6, 3, 0, 7, 4, 1, 8, 5, 2, 9];
 
-            for operation in &operations {
-                res = operation.apply(res, stack_len);
+            for (index, input) in inputs.iter().enumerate() {
+
+                let mut res = *input;
+                for operation in &operations {
+                    res = operation.apply(res, inputs.len() as i64);
+                }
+
+                assert_eq!(res, index as i64);
             }
-
-            assert_eq!(res, 9);
         }
 
         {
@@ -181,14 +197,17 @@ mod tests {
             let mut operations = parse_operations(&input);
             operations.reverse();
 
-            let mut res = 9;
-            let stack_len = 10;
+            let inputs = [9, 2, 5, 8, 1, 4, 7, 0, 3, 6];
 
-            for operation in &operations {
-                res = operation.apply(res, stack_len);
+            for (index, input) in inputs.iter().enumerate() {
+
+                let mut res = *input;
+                for operation in &operations {
+                    res = operation.apply(res, inputs.len() as i64);
+                }
+
+                assert_eq!(res, index as i64);
             }
-
-            assert_eq!(res, 6);
         }
     }
 }
