@@ -19,23 +19,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         computers.push(IntcodeComputer::new(&program));
         queues.push(vec![i]);
     }
-    
+
     let mut done = false;
     let mut idle = false;
     let mut last_idle;
 
     loop {
-
         last_idle = idle;
         idle = true;
 
         for (i, incode) in computers.iter_mut().enumerate() {
-           
             let mut input = queues[i].drain(..).collect::<Vec<_>>();
 
             if input.len() == 0 {
                 if i == 0 && last_idle {
-
                     if nat == last_nat {
                         println!("First nat repeate {:?}", nat);
                         done = true;

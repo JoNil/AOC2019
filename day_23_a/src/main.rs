@@ -22,7 +22,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     loop {
         for (i, incode) in computers.iter_mut().enumerate() {
-
             let mut input = queues[i].drain(..).collect::<Vec<_>>();
 
             if input.len() == 0 {
