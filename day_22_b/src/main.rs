@@ -21,7 +21,7 @@ impl Operation {
 
                 let e = i64::extended_gcd(&num, &len);
 
-                let mut res = (tracked_pos * e.x / e.gcd) % len;
+                let mut res = ((tracked_pos as i128 * e.x as i128 / e.gcd as i128) % len as i128) as i64;
 
                 while res < 0 {
                     res += len / e.gcd;
