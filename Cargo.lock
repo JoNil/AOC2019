@@ -238,16 +238,10 @@ dependencies = [
 [[package]]
 name = "day_24_a"
 version = "0.1.0"
-dependencies = [
- "int_comp 0.1.0",
-]
 
 [[package]]
 name = "day_24_b"
 version = "0.1.0"
-dependencies = [
- "int_comp 0.1.0",
-]
 
 [[package]]
 name = "day_25_a"
