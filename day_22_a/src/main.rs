@@ -15,7 +15,6 @@ impl Operation {
                 deck.reverse();
             }
             &Operation::DealWithIncrement(num) => {
-
                 let old = deck.to_vec();
 
                 let mut pos = 0;
@@ -44,11 +43,9 @@ impl Operation {
 }
 
 fn parse_operations(input: &str) -> Vec<Operation> {
-
     let mut res = Vec::new();
 
     for line in input.lines() {
-
         let line = line.trim();
 
         if line.starts_with("deal with increment ") {
@@ -82,14 +79,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         operation.apply(&mut stack);
     }
 
-    println!("{:#?}", stack.iter().position(|n| *n == 2019).ok_or("Not found")?);
+    println!(
+        "{:#?}",
+        stack.iter().position(|n| *n == 2019).ok_or("Not found")?
+    );
 
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_operations};
+    use super::parse_operations;
 
     #[test]
     fn test_22_a() {

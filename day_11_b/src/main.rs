@@ -37,6 +37,7 @@ fn paint(int_comp: &mut IntcodeComputer) -> Result<HashMap<(i32, i32), i32>, Box
                 return Ok(painted_squares);
             }
             IntcodeOutput::Interrupt(output) => (output[0], output[1]),
+            IntcodeOutput::NeedMoreInput => Err("Error")?,
         };
 
         painted_squares.insert(pos, color_to_paint as i32);

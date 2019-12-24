@@ -11,11 +11,8 @@ enum Operation {
 impl Operation {
     fn apply(&self, tracked_pos: i64, len: i64) -> i64 {
         match self {
-            &Operation::DealIntoNewStack => {
-                len - tracked_pos - 1
-            }
+            &Operation::DealIntoNewStack => len - tracked_pos - 1,
             &Operation::DealWithIncrement(num) => {
-
                 let num = num as i64;
 
                 //(num*x) % len = tracked_pos
@@ -23,8 +20,8 @@ impl Operation {
                 let mut res = 0;
 
                 for i in 0.. {
-                    if (tracked_pos + len*i) % num == 0 {
-                        res = (tracked_pos + len*i) / num;
+                    if (tracked_pos + len * i) % num == 0 {
+                        res = (tracked_pos + len * i) / num;
                         break;
                     }
                 }
@@ -38,19 +35,15 @@ impl Operation {
                 dbg!(res)
             }
             &Operation::Cut(val) => {
-
                 let num = -val as i64;
 
                 if num > 0 {
-
                     if tracked_pos > num {
                         tracked_pos + len - num
                     } else {
                         tracked_pos - num
                     }
-                    
                 } else {
-
                     let inv_num = num.abs();
 
                     if len - dbg!(inv_num) > tracked_pos {
@@ -65,11 +58,9 @@ impl Operation {
 }
 
 fn parse_operations(input: &str) -> Vec<Operation> {
-
     let mut res = Vec::new();
 
     for line in input.lines() {
-
         let line = line.trim();
 
         if line.starts_with("deal with increment ") {
@@ -93,7 +84,6 @@ fn parse_operations(input: &str) -> Vec<Operation> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
     let input = fs::read_to_string("input")?;
 
     let mut operations = parse_operations(&input);
@@ -115,7 +105,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_operations};
+    use super::parse_operations;
 
     #[test]
     fn test_22_b() {
@@ -130,7 +120,6 @@ mod tests {
             let inputs = [0, 3, 6, 9, 2, 5, 8, 1, 4, 7];
 
             for (index, input) in inputs.iter().enumerate() {
-
                 let mut res = *input;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
@@ -151,7 +140,6 @@ mod tests {
             let inputs = [3, 0, 7, 4, 1, 8, 5, 2, 9, 6];
 
             for (index, input) in inputs.iter().enumerate() {
-
                 let mut res = *input;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
@@ -172,7 +160,6 @@ mod tests {
             let inputs = [6, 3, 0, 7, 4, 1, 8, 5, 2, 9];
 
             for (index, input) in inputs.iter().enumerate() {
-
                 let mut res = *input;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
@@ -200,7 +187,6 @@ mod tests {
             let inputs = [9, 2, 5, 8, 1, 4, 7, 0, 3, 6];
 
             for (index, input) in inputs.iter().enumerate() {
-
                 let mut res = *input;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);

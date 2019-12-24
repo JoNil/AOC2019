@@ -10,7 +10,6 @@ fn parse_input(input: &str) -> Result<Vec<i32>, Box<dyn Error>> {
 }
 
 fn fft_digit_inner(signal: &[i32], digit: usize) -> i32 {
-
     let pattern = [0, 1, 0, -1];
 
     let mut sum = 0;
@@ -32,12 +31,10 @@ fn fft_digit_inner(signal: &[i32], digit: usize) -> i32 {
 }
 
 fn fft_digit(signal: &[i32], digit: usize) -> i32 {
-
     let signal_len = signal.len();
     let signal_half_len = signal_len / 2;
 
     if signal_len % (digit * 2 + 2) == 0 && (signal_len / (digit * 2 + 2)) % 2 == 0 {
-
         let a = fft_digit(&signal[..signal_half_len], digit);
         let b = fft_digit(&signal[signal_half_len..], digit);
 
@@ -46,7 +43,6 @@ fn fft_digit(signal: &[i32], digit: usize) -> i32 {
         } else {
             a + b
         }
-
     } else {
         fft_digit_inner(signal, digit)
     }
@@ -66,7 +62,6 @@ fn fft(signal: &[i32]) -> Vec<i32> {
     let mut last = 0;
 
     for (digit, out) in res[signal_half_len..].iter_mut().enumerate().rev() {
-
         last = (last + signal[signal_half_len + digit]).abs() % 10;
         *out = last;
     }

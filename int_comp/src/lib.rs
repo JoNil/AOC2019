@@ -101,6 +101,7 @@ fn get_address(
 pub enum IntcodeOutput {
     Halt(Vec<i64>),
     Interrupt(Vec<i64>),
+    NeedMoreInput,
 }
 
 impl IntcodeOutput {
@@ -108,6 +109,7 @@ impl IntcodeOutput {
         match self {
             IntcodeOutput::Halt(output) => output,
             IntcodeOutput::Interrupt(output) => output,
+            IntcodeOutput::NeedMoreInput => &[],
         }
     }
 }
@@ -116,6 +118,7 @@ pub struct IntcodeComputer {
     pc: usize,
     relative_base: i64,
     memory: Box<[i64]>,
+    output: Vec<i64>,
 }
 
 impl IntcodeComputer {
@@ -131,6 +134,7 @@ impl IntcodeComputer {
             pc: 0,
             relative_base: 0,
             memory: memory,
+            output: Vec::new(),
         }
     }
 }
@@ -142,7 +146,6 @@ impl IntcodeComputer {
         outputs_before_interrupt: Option<i32>,
     ) -> Result<IntcodeOutput, Box<dyn Error>> {
         let mut input_counter = 0;
-        let mut output = Vec::new();
 
         loop {
             let opcode = Opcode::try_from(self.memory[self.pc])?;
@@ -173,6 +176,10 @@ impl IntcodeComputer {
                 Opcode::Input(mode) => {
                     let value = self.memory[self.pc + 1];
 
+                    if input_counter >= input.len() {
+                        return Ok(IntcodeOutput::NeedMoreInput);
+                    }
+
                     self.memory[get_address(value, mode, self.relative_base)?] =
                         input[input_counter];
 
@@ -182,13 +189,16 @@ impl IntcodeComputer {
                 Opcode::Output(mode) => {
                     let value = self.memory[self.pc + 1];
 
-                    output.push(get_parameter(&self.memory, value, mode, self.relative_base));
+                    self.output
+                        .push(get_parameter(&self.memory, value, mode, self.relative_base));
 
                     self.pc += 2;
 
                     if let Some(outputs_before_interrupt) = outputs_before_interrupt {
-                        if output.len() == outputs_before_interrupt as usize {
-                            return Ok(IntcodeOutput::Interrupt(output));
+                        if self.output.len() == outputs_before_interrupt as usize {
+                            return Ok(IntcodeOutput::Interrupt(
+                                self.output.drain(..).collect::<Vec<_>>(),
+                            ));
                         }
                     }
                 }
@@ -253,7 +263,9 @@ impl IntcodeComputer {
                     self.pc += 2;
                 }
                 Opcode::Halt => {
-                    return Ok(IntcodeOutput::Halt(output));
+                    return Ok(IntcodeOutput::Halt(
+                        self.output.drain(..).collect::<Vec<_>>(),
+                    ));
                 }
             }
         }

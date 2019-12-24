@@ -29,7 +29,7 @@ RUN
 ";
 
     let mut incode = IntcodeComputer::new(&program);
-    
+
     let output = incode.run(&input.chars().map(|c| c as i64).collect::<Vec<_>>(), None)?;
 
     for data in output.data() {

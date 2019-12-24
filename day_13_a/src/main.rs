@@ -58,6 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             IntcodeOutput::Halt(_) => {
                 break;
             }
+            IntcodeOutput::NeedMoreInput => Err("Error")?,
         }
     }
 

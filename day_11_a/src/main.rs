@@ -35,6 +35,7 @@ fn paint(int_comp: &mut IntcodeComputer) -> Result<i32, Box<dyn Error>> {
                 return Ok(painted_squares.len() as i32);
             }
             IntcodeOutput::Interrupt(output) => (output[0], output[1]),
+            IntcodeOutput::NeedMoreInput => Err("Error")?,
         };
 
         painted_squares.insert(pos, color_to_paint as i32);

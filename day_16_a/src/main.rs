@@ -48,9 +48,8 @@ fn fft(signal: &[i32]) -> Vec<i32> {
         let a = fft(&signal[..signal_half_len]);
         let b = fft(&signal[signal_half_len..]);
 
-        for (i, out_digit) in out[..(signal_half_len/2)].iter_mut().enumerate() {
-
-            if signal_len / (i*2 + 2) > 2 {
+        for (i, out_digit) in out[..(signal_half_len / 2)].iter_mut().enumerate() {
+            if signal_len / (i * 2 + 2) > 2 {
                 *out_digit = (a[i] - b[i]).abs() % 10;
             } else {
                 *out_digit = (a[i] + b[i]).abs() % 10;
@@ -64,9 +63,13 @@ fn fft(signal: &[i32]) -> Vec<i32> {
             *out_digit = last;
         }
 
-        for (i, out_digit) in out[(signal_half_len/2)..signal_half_len].iter_mut().enumerate().rev() {
-            last = (last + signal[signal_half_len/2 + i]).abs() % 10;
-            
+        for (i, out_digit) in out[(signal_half_len / 2)..signal_half_len]
+            .iter_mut()
+            .enumerate()
+            .rev()
+        {
+            last = (last + signal[signal_half_len / 2 + i]).abs() % 10;
+
             *out_digit = last;
         }
 

@@ -234,9 +234,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         let output = match int_comp.run(&[input.as_i32() as i64], Some(1))? {
             IntcodeOutput::Interrupt(output) => Output::from_i32(output[0] as i32),
-            IntcodeOutput::Halt(_) => {
-                return Err("Halt".into());
-            }
+            IntcodeOutput::Halt(_) => return Err("Halt")?,
+            IntcodeOutput::NeedMoreInput => return Err("Error")?,
         };
 
         if let Some(draw_instructions) =

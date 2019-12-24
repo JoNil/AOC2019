@@ -11,8 +11,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         .collect::<Result<Vec<_>, _>>()?;
 
     let mut incode = IntcodeComputer::new(&program);
-    
-    let output = incode.run(&[], None)?;
+
+    let _output = incode.run(&[], None)?;
 
     Ok(())
 }

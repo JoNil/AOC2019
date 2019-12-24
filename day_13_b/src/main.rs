@@ -110,6 +110,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             IntcodeOutput::Halt(_) => {
                 break;
             }
+            IntcodeOutput::NeedMoreInput => Err("Error")?,
         }
 
         thread::sleep(Duration::from_millis(10));
