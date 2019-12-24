@@ -13,36 +13,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut computers = Vec::new();
     let mut queues = Vec::new();
 
-    for _ in 0..50 {
+    for i in 0..50 {
         computers.push(IntcodeComputer::new(&program));
-        queues.push(Vec::new());
+        queues.push(vec![i]);
     }
 
-    let mut first = true;
     let mut done = false;
 
     loop {
         for (i, incode) in computers.iter_mut().enumerate() {
-            let input = if first {
-                let mut input = Vec::new();
-                input.push(i as i64);
 
-                input.extend(queues[i].drain(..));
+            let mut input = queues[i].drain(..).collect::<Vec<_>>();
 
-                if input.len() == 1 {
-                    input.push(-1);
-                }
-
-                input
-            } else {
-                let mut input = queues[i].drain(..).collect::<Vec<_>>();
-
-                if input.len() == 0 {
-                    input.push(-1);
-                }
-
-                input
-            };
+            if input.len() == 0 {
+                input.push(-1);
+            }
 
             let output = incode.run(&input, Some(3))?;
 
@@ -64,8 +49,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 _ => continue,
             }
         }
-
-        first = false;
 
         if done {
             break;
