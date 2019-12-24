@@ -1,6 +1,7 @@
 use num_integer::Integer;
 use std::error::Error;
 use std::fs;
+use std::time::Instant;
 
 #[derive(Copy, Clone, Debug)]
 enum Operation {
@@ -78,7 +79,6 @@ fn parse_operations(input: &str) -> Vec<Operation> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
     let input = fs::read_to_string("input")?;
 
     let mut operations = parse_operations(&input);
@@ -87,10 +87,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut tracked_pos = 2020;
     let stack_len = 119_315_717_514_047_i64;
 
+    let mut start = Instant::now();
+
     for i in 0..101_741_582_076_661_i64 {
         if i % 1_000_000_i64 == 0 {
-            println!("{}", i);
+            let now = Instant::now();
+            println!("{}: {}", i / 1_000_000, (now - start).as_secs_f64() * 1000.0);
+            start = now;
         }
+
         for operation in &operations {
             tracked_pos = operation.apply(tracked_pos, stack_len);
         }
@@ -122,7 +127,7 @@ mod tests {
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-    
+
                 assert_eq!(res, inputs[index as usize]);
             }
         }
@@ -142,7 +147,7 @@ mod tests {
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-    
+
                 assert_eq!(res, inputs[index as usize]);
             }
         }
@@ -162,7 +167,7 @@ mod tests {
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-    
+
                 assert_eq!(res, inputs[index as usize]);
             }
         }
@@ -189,7 +194,7 @@ mod tests {
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-    
+
                 assert_eq!(res, inputs[index as usize]);
             }
         }
