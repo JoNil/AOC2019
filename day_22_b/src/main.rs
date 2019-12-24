@@ -1,3 +1,4 @@
+use num_integer::Integer;
 use std::error::Error;
 use std::fs;
 
@@ -17,28 +18,21 @@ impl Operation {
 
                 //(num*x) % len = tracked_pos
 
-                let mut res = 0;
+                let e = i64::extended_gcd(&num, &len);
 
-                for i in 0.. {
-                    if (tracked_pos + len * i) % num == 0 {
-                        res = (tracked_pos + len * i) / num;
-                        break;
-                    }
+                let mut res = (tracked_pos * e.x / e.gcd) % len;
+
+                while res < 0 {
+                    res += len / e.gcd;
                 }
 
-                //[0, 3, 6, 9, 2, 5, 8, 1, 4, 7]
-
-                dbg!(num);
-                dbg!(tracked_pos);
-                dbg!(len);
-
-                dbg!(res)
+                res
             }
             &Operation::Cut(val) => {
                 let num = -val as i64;
 
                 if num > 0 {
-                    if tracked_pos > num {
+                    if tracked_pos < num {
                         tracked_pos + len - num
                     } else {
                         tracked_pos - num
@@ -46,7 +40,7 @@ impl Operation {
                 } else {
                     let inv_num = num.abs();
 
-                    if len - dbg!(inv_num) > tracked_pos {
+                    if len - inv_num > tracked_pos {
                         tracked_pos + inv_num
                     } else {
                         tracked_pos - len + inv_num
@@ -84,6 +78,7 @@ fn parse_operations(input: &str) -> Vec<Operation> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+
     let input = fs::read_to_string("input")?;
 
     let mut operations = parse_operations(&input);
@@ -92,7 +87,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut tracked_pos = 2020;
     let stack_len = 119_315_717_514_047_i64;
 
-    for _i in 0..101_741_582_076_661_i64 {
+    for i in 0..101_741_582_076_661_i64 {
+        if i % 1_000_000_i64 == 0 {
+            println!("{}", i);
+        }
         for operation in &operations {
             tracked_pos = operation.apply(tracked_pos, stack_len);
         }
@@ -119,13 +117,13 @@ mod tests {
 
             let inputs = [0, 3, 6, 9, 2, 5, 8, 1, 4, 7];
 
-            for (index, input) in inputs.iter().enumerate() {
-                let mut res = *input;
+            for (index, _) in inputs.iter().enumerate() {
+                let mut res = index as i64;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-
-                assert_eq!(res, index as i64);
+    
+                assert_eq!(res, inputs[index as usize]);
             }
         }
 
@@ -139,13 +137,13 @@ mod tests {
 
             let inputs = [3, 0, 7, 4, 1, 8, 5, 2, 9, 6];
 
-            for (index, input) in inputs.iter().enumerate() {
-                let mut res = *input;
+            for (index, _) in inputs.iter().enumerate() {
+                let mut res = index as i64;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-
-                assert_eq!(res, index as i64);
+    
+                assert_eq!(res, inputs[index as usize]);
             }
         }
 
@@ -159,13 +157,13 @@ mod tests {
 
             let inputs = [6, 3, 0, 7, 4, 1, 8, 5, 2, 9];
 
-            for (index, input) in inputs.iter().enumerate() {
-                let mut res = *input;
+            for (index, _) in inputs.iter().enumerate() {
+                let mut res = index as i64;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-
-                assert_eq!(res, index as i64);
+    
+                assert_eq!(res, inputs[index as usize]);
             }
         }
 
@@ -186,13 +184,13 @@ mod tests {
 
             let inputs = [9, 2, 5, 8, 1, 4, 7, 0, 3, 6];
 
-            for (index, input) in inputs.iter().enumerate() {
-                let mut res = *input;
+            for (index, _) in inputs.iter().enumerate() {
+                let mut res = index as i64;
                 for operation in &operations {
                     res = operation.apply(res, inputs.len() as i64);
                 }
-
-                assert_eq!(res, index as i64);
+    
+                assert_eq!(res, inputs[index as usize]);
             }
         }
     }

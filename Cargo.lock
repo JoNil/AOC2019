@@ -220,6 +220,9 @@ version = "0.1.0"
 [[package]]
 name = "day_22_b"
 version = "0.1.0"
+dependencies = [
+ "num-integer 0.1.41 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "day_23_a"
