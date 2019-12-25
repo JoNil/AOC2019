@@ -15,7 +15,6 @@ impl Operation {
         match self {
             &Operation::DealIntoNewStack => len - tracked_pos - 1,
             &Operation::DealWithIncrement(e_gcd) => {
-
                 //(num*x) % len = tracked_pos
 
                 let mut res = ((tracked_pos as i128 * e_gcd as i128) % len as i128) as i64;
@@ -57,8 +56,8 @@ fn parse_operations(input: &str, len: i64) -> Vec<Operation> {
 
         if line.starts_with("deal with increment ") {
             if let Some(num) = line.split("deal with increment ").nth(1) {
-                if let Ok(num) = num.parse::<i32>() {
-                    let e = i64::extended_gcd(&(num as i64), &len);
+                if let Ok(num) = num.parse::<i64>() {
+                    let e = i64::extended_gcd(&num, &len);
                     res.push(Operation::DealWithIncrement(e.x));
                 }
             }
@@ -87,15 +86,27 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut start = Instant::now();
 
+    // loops at 5003 in a
+    // Loop will be at some prime no, len is always prime
+
     for i in 0..101_741_582_076_661_i64 {
         if i % 1_000_000_i64 == 0 {
             let now = Instant::now();
-            println!("{}: {}", i / 1_000_000, (now - start).as_secs_f64() * 1000.0);
+            println!(
+                "{}: {}",
+                i / 1_000_000,
+                (now - start).as_secs_f64() * 1000.0
+            );
             start = now;
         }
 
         for operation in &operations {
             tracked_pos = operation.apply(tracked_pos, stack_len);
+        }
+
+        if tracked_pos == 2020 {
+            println!("Found loop at {}", i);
+            break;
         }
     }
 
