@@ -6,7 +6,7 @@ use std::time::Instant;
 #[derive(Copy, Clone, Debug)]
 enum Operation {
     DealIntoNewStack,
-    DealWithIncrement(i32),
+    DealWithIncrement( i64),
     Cut(i32),
 }
 
@@ -14,14 +14,11 @@ impl Operation {
     fn apply(&self, tracked_pos: i64, len: i64) -> i64 {
         match self {
             &Operation::DealIntoNewStack => len - tracked_pos - 1,
-            &Operation::DealWithIncrement(num) => {
-                let num = num as i64;
+            &Operation::DealWithIncrement(e_gcd) => {
 
                 //(num*x) % len = tracked_pos
 
-                let e = i64::extended_gcd(&num, &len);
-
-                let mut res = ((tracked_pos as i128 * e.x as i128) % len as i128) as i64;
+                let mut res = ((tracked_pos as i128 * e_gcd as i128) % len as i128) as i64;
 
                 while res < 0 {
                     res += len;
@@ -52,7 +49,7 @@ impl Operation {
     }
 }
 
-fn parse_operations(input: &str) -> Vec<Operation> {
+fn parse_operations(input: &str, len: i64) -> Vec<Operation> {
     let mut res = Vec::new();
 
     for line in input.lines() {
@@ -61,7 +58,8 @@ fn parse_operations(input: &str) -> Vec<Operation> {
         if line.starts_with("deal with increment ") {
             if let Some(num) = line.split("deal with increment ").nth(1) {
                 if let Ok(num) = num.parse::<i32>() {
-                    res.push(Operation::DealWithIncrement(num));
+                    let e = i64::extended_gcd(&(num as i64), &len);
+                    res.push(Operation::DealWithIncrement(e.x));
                 }
             }
         } else if line.starts_with("cut ") {
@@ -81,11 +79,11 @@ fn parse_operations(input: &str) -> Vec<Operation> {
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
 
-    let mut operations = parse_operations(&input);
-    operations.reverse();
-
     let mut tracked_pos = 2020;
     let stack_len = 119_315_717_514_047_i64;
+
+    let mut operations = parse_operations(&input, stack_len);
+    operations.reverse();
 
     let mut start = Instant::now();
 
@@ -117,7 +115,7 @@ mod tests {
                 deal into new stack
                 deal into new stack";
 
-            let mut operations = parse_operations(&input);
+            let mut operations = parse_operations(&input, 10);
             operations.reverse();
 
             let inputs = [0, 3, 6, 9, 2, 5, 8, 1, 4, 7];
@@ -137,7 +135,7 @@ mod tests {
                 deal with increment 7
                 deal into new stack";
 
-            let mut operations = parse_operations(&input);
+            let mut operations = parse_operations(&input, 10);
             operations.reverse();
 
             let inputs = [3, 0, 7, 4, 1, 8, 5, 2, 9, 6];
@@ -157,7 +155,7 @@ mod tests {
                 deal with increment 9
                 cut -2";
 
-            let mut operations = parse_operations(&input);
+            let mut operations = parse_operations(&input, 10);
             operations.reverse();
 
             let inputs = [6, 3, 0, 7, 4, 1, 8, 5, 2, 9];
@@ -184,7 +182,7 @@ mod tests {
                 deal with increment 3
                 cut -1";
 
-            let mut operations = parse_operations(&input);
+            let mut operations = parse_operations(&input, 10);
             operations.reverse();
 
             let inputs = [9, 2, 5, 8, 1, 4, 7, 0, 3, 6];
