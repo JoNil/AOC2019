@@ -15,19 +15,33 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
 
     let half_size = signal.len() / 2;
 
+    let mut last = 0;
+
+    for (i, out_digit) in out[half_size..].iter_mut().enumerate().rev() {
+        last = (last + signal[half_size + i]).abs() % 10;
+
+        *out_digit = last;
+    }
+
+    let div_3_size = (signal.len() + 1) / 3;
+
+    let mut sub_row = signal.len() - 1;
+
+    for i in (div_3_size..half_size).rev() {
+        last = (last + signal[i] - out[sub_row]).abs() % 10;
+
+        sub_row -= 2;
+
+        out[i] = last;
+    }
+
     let pattern = [0, 1, 0, -1];
 
-    for (i, out_digit) in out[..half_size].iter_mut().enumerate() {
-
-        if i % 1000 == 0 {
-            println!("{}", i);
-        }
-
+    for (i, out_digit) in out[..div_3_size].iter_mut().enumerate() {
         let mut sum = 0;
         let mut pattern_digit = 1;
 
         for in_digit in signal[i..].chunks(i + 1) {
-
             if pattern_digit == 1 || pattern_digit == 3 {
                 sum += in_digit.iter().sum::<i32>() * pattern[pattern_digit];
             }
@@ -36,18 +50,6 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
 
         *out_digit = sum.abs() % 10;
     }
-
-    let mut last = 0;
-
-    for (i, out_digit) in out[half_size..]
-            .iter_mut()
-            .enumerate()
-            .rev()
-        {
-            last = (last + signal[half_size + i]).abs() % 10;
-
-            *out_digit = last;
-        }
 
     out
 }

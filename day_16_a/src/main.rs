@@ -15,35 +15,53 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
 
     let half_size = signal.len() / 2;
 
-    let pattern = [0, 1, 0, -1];
+    {
+        let mut last = 0;
 
-    for (i, out_digit) in out[..half_size].iter_mut().enumerate() {
-
-        let mut sum = 0;
-        let mut pattern_digit = 1;
-
-        for in_digit in signal[i..].chunks(i + 1) {
-
-            if pattern_digit == 1 || pattern_digit == 3 {
-                sum += in_digit.iter().sum::<i32>() * pattern[pattern_digit];
-            }
-            pattern_digit = (pattern_digit + 1) % 4;
-        }
-
-        *out_digit = sum.abs() % 10;
-    }
-
-    let mut last = 0;
-
-    for (i, out_digit) in out[half_size..]
-            .iter_mut()
-            .enumerate()
-            .rev()
-        {
-            last = (last + signal[half_size + i]).abs() % 10;
+        for (i, out_digit) in out[half_size..].iter_mut().enumerate().rev() {
+            last = last + signal[half_size + i];
 
             *out_digit = last;
         }
+    }
+
+    let div_3_size = (signal.len() - 2) / 3 + 1;
+
+    {
+        let mut sub_row = signal.len() - 1;
+
+        let mut last = 0;
+
+        for i in (div_3_size..half_size).rev() {
+            last = last + signal[i];
+
+            out[i] = last + out[half_size] - out[sub_row];
+            
+            sub_row -= 2;
+        }
+    }
+
+    for out in out[div_3_size..].iter_mut() {
+        *out = out.abs() % 10
+    }
+
+    {
+        let pattern = [0, 1, 0, -1];
+
+        for (i, out_digit) in out[..div_3_size].iter_mut().enumerate() {
+            let mut sum = 0;
+            let mut pattern_digit = 1;
+
+            for in_digit in signal[i..].chunks(i + 1) {
+                if pattern_digit == 1 || pattern_digit == 3 {
+                    sum += in_digit.iter().sum::<i32>() * pattern[pattern_digit];
+                }
+                pattern_digit = (pattern_digit + 1) % 4;
+            }
+
+            *out_digit = sum.abs() % 10;
+        }
+    }
 
     out
 }
@@ -61,6 +79,7 @@ fn fft_phases(mut signal: Vec<i32>, phases: i32) -> Vec<i32> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+
     assert_eq!(
         fft_phases(parse_input("12345678").unwrap(), 4),
         [0, 1, 0, 2, 9, 4, 9, 8]

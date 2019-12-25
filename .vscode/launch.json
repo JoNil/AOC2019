@@ -8,7 +8,7 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "target/debug/day_22_b.exe",
+            "program": "target/debug/day_16_a.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
