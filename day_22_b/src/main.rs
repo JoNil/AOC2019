@@ -6,7 +6,7 @@ use std::time::Instant;
 #[derive(Copy, Clone, Debug)]
 enum Operation {
     DealIntoNewStack,
-    DealWithIncrement( i64),
+    DealWithIncrement(i64),
     Cut(i32),
 }
 
