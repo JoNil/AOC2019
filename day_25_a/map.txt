@@ -1,0 +1,31 @@
+
+                            S - 14   12
+                            |    |    |
+                 4 - 3 - 2      13 - 11 - 6 - 18
+                         |       |        |
+                     8   | 16 - 15        |
+                     |   |                |        
+                     7 - 1 -------------- 5 - 19
+                     |                  
+                     9 - 10               
+
+
+
+1: Hull breach
+2: Stables
+3: Sick bay
+4: Warp Drive Maintenance
+5: Science Lab
+6: Observatory
+7: Nav
+8: Hallway
+9: Arcade
+10: Corridor
+11: Crew Quarters
+12: Storage
+13: Gift Wrapping Center
+14: Engineering
+15: Kitchen
+16: Hot Chocolate Fountain
+18: Holodeck
+19: Passages
