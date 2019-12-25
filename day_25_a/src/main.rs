@@ -1,5 +1,5 @@
 use int_comp::{IntcodeComputer, IntcodeOutput};
-use rustyline::{Editor, error::ReadlineError};
+use rustyline::Editor;
 use std::error::Error;
 use std::fs;
 
@@ -14,19 +14,28 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut incode = IntcodeComputer::new(&program);
 
     let mut rl = Editor::<()>::new();
-
     let mut input = Vec::new();
+    let mut run = true;
 
-    loop {
+    while run {
 
-        match incode.run(&input.drain(..).collect::<Vec<_>>(), Some(1))? {
-            IntcodeOutput::Halt(_) => break,
-            IntcodeOutput::Interrupt(output) => {
-                for ch in output.iter().map(|c| *c as u8 as char) {
-                    print!("{}", ch);
+        let mut got_output = true;
+
+        while got_output {
+            match incode.run(&input.drain(..).collect::<Vec<_>>(), Some(1))? {
+                IntcodeOutput::Halt(_) => {
+                    got_output = false;
+                    run = false;
+                }
+                IntcodeOutput::Interrupt(output) => {
+                    for ch in output.iter().map(|c| *c as u8 as char) {
+                        print!("{}", ch);
+                    }
+                }
+                IntcodeOutput::NeedMoreInput => {
+                    got_output = false;
                 }
             }
-            IntcodeOutput::NeedMoreInput => {}
         }
 
         let readline = rl.readline(">> ");
@@ -35,17 +44,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 rl.add_history_entry(line.as_str());
                 input.extend(line.chars().map(|ch| ch as i64));
             },
-            Err(ReadlineError::Interrupted) => {
-                println!("CTRL-C");
-                break
-            },
-            Err(ReadlineError::Eof) => {
-                println!("CTRL-D");
-                break
-            },
             Err(err) => {
                 println!("Error: {:?}", err);
-                break
+                run = false;
             }
         }
     }
