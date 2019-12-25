@@ -35,7 +35,7 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
         out[i] = last;
     }
 
-    let pattern = [0, 1, 0, -1];
+    /*let pattern = [0, 1, 0, -1];
 
     for (i, out_digit) in out[..div_3_size].iter_mut().enumerate() {
         let mut sum = 0;
@@ -49,7 +49,7 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
         }
 
         *out_digit = sum.abs() % 10;
-    }
+    }*/
 
     out
 }
@@ -68,7 +68,7 @@ fn fft_phases(mut signal: Vec<i32>, phases: i32) -> Vec<i32> {
 }
 
 fn fft_b(input: &str, phases: i32) -> Result<Vec<i32>, Box<dyn Error>> {
-    let offset = input[..8].parse::<usize>()?;
+    let offset = input[..7].parse::<usize>()?;
 
     let signal = {
         let initital_signal = parse_input(&input)?;
