@@ -9,68 +9,56 @@ fn parse_input(input: &str) -> Result<Vec<i32>, Box<dyn Error>> {
         .collect::<Result<Vec<_>, _>>()
 }
 
-fn fft_digit_inner(signal: &[i32], digit: usize) -> i32 {
+fn fft_inner(signal: &[i32]) -> Vec<i32> {
+    let mut out = Vec::new();
+    out.resize_with(signal.len(), Default::default);
+
+    let half_size = signal.len() / 2;
+
     let pattern = [0, 1, 0, -1];
 
-    let mut sum = 0;
-    let mut pattern_counter = digit + 1;
-    let mut pattern_digit = 1;
+    for (i, out_digit) in out[..half_size].iter_mut().enumerate() {
 
-    for in_digit in &signal[digit..] {
-        if pattern_counter == 0 {
-            pattern_counter = digit + 1;
-            pattern_digit = (pattern_digit + 1) % pattern.len();
+        if i % 1000 == 0 {
+            println!("{}", i);
         }
 
-        sum += *in_digit * pattern[pattern_digit];
+        let mut sum = 0;
+        let mut pattern_digit = 1;
 
-        pattern_counter -= 1;
-    }
+        for in_digit in signal[i..].chunks(i + 1) {
 
-    sum
-}
-
-fn fft_digit(signal: &[i32], digit: usize) -> i32 {
-    let signal_len = signal.len();
-    let signal_half_len = signal_len / 2;
-
-    if signal_len % (digit * 2 + 2) == 0 && (signal_len / (digit * 2 + 2)) % 2 == 0 {
-        let a = fft_digit(&signal[..signal_half_len], digit);
-        let b = fft_digit(&signal[signal_half_len..], digit);
-
-        if signal_len / (digit * 2 + 2) == 2 {
-            a - b
-        } else {
-            a + b
+            if pattern_digit == 1 || pattern_digit == 3 {
+                sum += in_digit.iter().sum::<i32>() * pattern[pattern_digit];
+            }
+            pattern_digit = (pattern_digit + 1) % 4;
         }
-    } else {
-        fft_digit_inner(signal, digit)
-    }
-}
 
-fn fft(signal: &[i32]) -> Vec<i32> {
-    let mut res = Vec::new();
-    res.resize_with(signal.len(), Default::default);
-
-    let signal_len = signal.len();
-    let signal_half_len = signal_len / 2;
-
-    for (digit, out) in res[..signal_half_len].iter_mut().enumerate() {
-        *out = fft_digit(&signal, digit).abs() % 10;
+        *out_digit = sum.abs() % 10;
     }
 
     let mut last = 0;
 
-    for (digit, out) in res[signal_half_len..].iter_mut().enumerate().rev() {
-        last = (last + signal[signal_half_len + digit]).abs() % 10;
-        *out = last;
-    }
+    for (i, out_digit) in out[half_size..]
+            .iter_mut()
+            .enumerate()
+            .rev()
+        {
+            last = (last + signal[half_size + i]).abs() % 10;
 
-    res
+            *out_digit = last;
+        }
+
+    out
+}
+
+fn fft(signal: &[i32]) -> Vec<i32> {
+    fft_inner(&signal)
 }
 
 fn fft_phases(mut signal: Vec<i32>, phases: i32) -> Vec<i32> {
-    for _ in 0..phases {
+    for i in 0..phases {
+        dbg!(i);
         signal = fft(&signal);
     }
 

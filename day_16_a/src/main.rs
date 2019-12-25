@@ -13,75 +13,47 @@ fn fft_inner(signal: &[i32]) -> Vec<i32> {
     let mut out = Vec::new();
     out.resize_with(signal.len(), Default::default);
 
+    let half_size = signal.len() / 2;
+
     let pattern = [0, 1, 0, -1];
 
-    for (i, out_digit) in out.iter_mut().enumerate() {
+    for (i, out_digit) in out[..half_size].iter_mut().enumerate() {
+
         let mut sum = 0;
-        let mut pattern_counter = i + 1;
         let mut pattern_digit = 1;
 
-        for in_digit in &signal[i..] {
-            if pattern_counter == 0 {
-                pattern_counter = i + 1;
-                pattern_digit = (pattern_digit + 1) % pattern.len();
+        for in_digit in signal[i..].chunks(i + 1) {
+
+            if pattern_digit == 1 || pattern_digit == 3 {
+                sum += in_digit.iter().sum::<i32>() * pattern[pattern_digit];
             }
-
-            sum += *in_digit * pattern[pattern_digit];
-
-            pattern_counter -= 1;
+            pattern_digit = (pattern_digit + 1) % 4;
         }
 
         *out_digit = sum.abs() % 10;
     }
 
-    out
-}
+    let mut last = 0;
 
-fn fft(signal: &[i32]) -> Vec<i32> {
-    if signal.len() > 4 {
-        let mut out = Vec::new();
-        out.resize_with(signal.len(), Default::default);
-
-        let signal_len = signal.len();
-        let signal_half_len = signal_len / 2;
-
-        let a = fft(&signal[..signal_half_len]);
-        let b = fft(&signal[signal_half_len..]);
-
-        for (i, out_digit) in out[..(signal_half_len / 2)].iter_mut().enumerate() {
-            if signal_len / (i * 2 + 2) > 2 {
-                *out_digit = (a[i] - b[i]).abs() % 10;
-            } else {
-                *out_digit = (a[i] + b[i]).abs() % 10;
-            }
-        }
-
-        let mut last = 0;
-
-        for (i, out_digit) in out[signal_half_len..].iter_mut().enumerate().rev() {
-            last = (last + signal[signal_half_len + i]).abs() % 10;
-            *out_digit = last;
-        }
-
-        for (i, out_digit) in out[(signal_half_len / 2)..signal_half_len]
+    for (i, out_digit) in out[half_size..]
             .iter_mut()
             .enumerate()
             .rev()
         {
-            last = (last + signal[signal_half_len / 2 + i]).abs() % 10;
+            last = (last + signal[half_size + i]).abs() % 10;
 
             *out_digit = last;
         }
 
-        out
-    } else {
-        fft_inner(&signal)
-    }
+    out
+}
+
+fn fft(signal: &[i32]) -> Vec<i32> {
+    fft_inner(&signal)
 }
 
 fn fft_phases(mut signal: Vec<i32>, phases: i32) -> Vec<i32> {
-    for i in 0..phases {
-        dbg!(i);
+    for _ in 0..phases {
         signal = fft(&signal);
     }
 
