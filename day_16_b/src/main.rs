@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
 
     use super::fft_b;
@@ -119,4 +119,4 @@ mod tests {
             [5, 3, 5, 5, 3, 7, 3, 1]
         );
     }
-}
+}*/
