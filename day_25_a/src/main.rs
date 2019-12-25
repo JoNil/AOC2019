@@ -2,6 +2,7 @@ use int_comp::{IntcodeComputer, IntcodeOutput};
 use rustyline::Editor;
 use std::error::Error;
 use std::fs;
+use std::iter;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input")?;
@@ -18,7 +19,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut run = true;
 
     while run {
-
         let mut got_output = true;
 
         while got_output {
@@ -42,8 +42,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
-                input.extend(line.chars().map(|ch| ch as i64));
-            },
+                input.extend(line.chars().chain(iter::once('\n')).map(|ch| ch as i64));
+            }
             Err(err) => {
                 println!("Error: {:?}", err);
                 run = false;
