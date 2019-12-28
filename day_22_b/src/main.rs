@@ -1,6 +1,5 @@
 use std::error::Error;
 use std::fs;
-use std::time::Instant;
 
 // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
 fn combine(f: impl Fn(i64, i64, i64) -> i64, unit: i64, mut a: i64, mut b: i64, m: i64) -> i64 {
